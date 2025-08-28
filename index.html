@@ -15,7 +15,7 @@
 
   <style>
     :root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#111}
-    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s;-webkit-font-smoothing:antialiased}
+    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s; -webkit-font-smoothing:antialiased;}
     body.dark{--bg:#0f1720;--card:#111827;--text:#e6eef8}
     .wrap{max-width:1000px;margin:12px auto}
     .topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;align-items:center}
@@ -38,7 +38,7 @@
 <body>
   <div class="wrap">
     <div class="topbar">
-      <button id="darkToggle" class="btn-ghost small">🌙/☀️ Dark</button>
+      <button id="darkToggle" class="btn-ghost small" title="Dark mode toggle">🌙/☀️</button>
       <button id="refreshBtn" class="btn-ghost small" title="Reload page (full refresh)">🔄 Refresh</button>
       <button id="installBtn" class="btn-ghost small" style="display:none">Install</button>
     </div>
@@ -70,7 +70,7 @@
         <h3>គ្រប់គ្រងប្រភេទ (Categories)</h3>
         <div class="row">
           <input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី" />
-          <button onclick="addCategory()">បន្ថែម</button>
+          <button id="addCatBtn" onclick="addCategory()">បន្ថែម</button>
         </div>
         <div id="categoriesList" style="margin-top:8px"></div>
       </div>
@@ -189,7 +189,9 @@ const $ = id => document.getElementById(id);
 /* ============================
    App state
    ============================ */
-let lastReportExport = [];
+let categoriesUnsub = null;
+let itemsUnsub = null;
+let lastReportData = [];
 let lastReportRange = null;
 
 /* ============================
@@ -199,7 +201,7 @@ function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replaceAll
 function showPanel(id){ ['login','admin','seller'].forEach(p=>document.getElementById(p).style.display='none'); document.getElementById(id).style.display='block'; }
 
 /* ============================
-   Auth & login (no demo users)
+   Auth & login
    ============================ */
 auth.onAuthStateChanged(user => {
   if(user){
@@ -210,13 +212,16 @@ auth.onAuthStateChanged(user => {
     }
   } else {
     showPanel('login');
+    // unsubscribe listeners on logout to avoid duplicates
+    if(categoriesUnsub){ categoriesUnsub(); categoriesUnsub = null; }
+    if(itemsUnsub){ itemsUnsub(); itemsUnsub = null; }
   }
 });
 
 async function login(){
   const email = $('email').value.trim();
   const pass = $('password').value.trim();
-  if(!email || !pass){ alert('សូមបញ្ចូលអ៊ីមែល និង​ពាក្យសម្ងាត់'); return; }
+  if(!email || !pass){ alert('សូមបញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់'); return; }
   $('loginBtn').disabled = true; $('loginStatus').innerText = 'កំពុងចូល...';
   try{
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -230,23 +235,24 @@ async function login(){
 function logout(){ auth.signOut(); }
 
 /* ============================
-   Real-time Categories (listen)
+   Categories (real-time listener)
    ============================ */
-function listenCategories(){
-  db.collection('categories').orderBy('name').onSnapshot(snap => {
-    const cats = snap.docs.map(d => ({ id: d.id, name: d.data().name }));
-    // include categories used by items
-    db.collection('items').get().then(itemsSnap => {
-      itemsSnap.docs.forEach(d => { const c = d.data().category; if(c && !cats.find(x=>x.name===c)) cats.push({ id: null, name: c }); });
+function ensureCategoryListener(){
+  if(categoriesUnsub) return; // already listening
+  categoriesUnsub = db.collection('categories').orderBy('name').onSnapshot(snap=>{
+    const cats = snap.docs.map(d=>({ id: d.id, name: d.data().name }));
+    // include categories used by items (so sellers can choose)
+    db.collection('items').get().then(itemsSnap=>{
+      itemsSnap.docs.forEach(d=>{ const c = d.data().category; if(c && !cats.find(x=>x.name===c)) cats.push({ id: null, name: c }); });
       renderCategories(cats);
     }).catch(()=>renderCategories(cats));
   }, err => { console.error('categories listen failed', err); });
 }
 
 function renderCategories(cats){
-  $('sellCategory').innerHTML = cats.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') || '<option>ទទេ</option>';
-  $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
-  $('categoriesList').innerHTML = cats.map(c => {
+  $('sellCategory').innerHTML = cats.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') || '<option>ទទេ</option>';
+  $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+  $('categoriesList').innerHTML = cats.map(c=>{
     if(c.id){
       return `<div class="list-item"><div><b>${escapeHtml(c.name)}</b></div><div><button onclick="editCategory('${c.id}','${escapeHtml(c.name)}')">កែ</button> <button onclick="deleteCategory('${c.id}')">លុប</button></div></div>`;
     } else {
@@ -258,6 +264,9 @@ function renderCategories(cats){
 async function addCategory(){
   const name = $('newCategory').value.trim();
   if(!name) return alert('បញ្ចូលឈ្មោះប្រភេទ');
+  // prevent duplicates by name (case-insensitive)
+  const existing = await db.collection('categories').where('name','==',name).get();
+  if(!existing.empty){ alert('ប្រភេទបានមានរួចហើយ'); $('newCategory').value=''; return; }
   await db.collection('categories').add({ name });
   $('newCategory').value = '';
 }
@@ -274,8 +283,22 @@ async function deleteCategory(id){
 }
 
 /* ============================
-   Items (admin)
+   Items (real-time listener)
    ============================ */
+function ensureItemsListener(){
+  if(itemsUnsub) return;
+  itemsUnsub = db.collection('items').onSnapshot(snap=>{
+    const docs = snap.docs;
+    if(docs.length === 0){ $('items').innerHTML = '<div class="meta">គ្មានទំនិញ</div>'; return; }
+    const html = docs.map(d=>{
+      const it = d.data();
+      const img = it.imageUrl ? `<img class="icon" src="${escapeHtml(it.imageUrl)}" />` : '';
+      return `<div class="list-item"><div style="display:flex;align-items:center">${img}<div><b>${escapeHtml(it.name)}</b><div class="meta">${escapeHtml(it.category||'')}</div><div class="meta">${Number(it.price).toLocaleString()} ៛</div></div></div><div><button onclick="startEdit('${d.id}')">កែ</button> <button onclick="deleteItem('${d.id}')">លុប</button></div></div>`;
+    }).join('');
+    $('items').innerHTML = html;
+  }, err => { console.error('items listen failed', err); });
+}
+
 async function saveItem(){
   const id = $('editItemId').value.trim();
   const name = $('itemName').value.trim();
@@ -285,6 +308,7 @@ async function saveItem(){
   const file = $('itemImage').files[0];
 
   if(!name) return alert('បញ្ចូលឈ្មោះទំនិញ');
+  if(!category) return alert('សូមជ្រើសប្រភេទ');
 
   let imageUrl = '';
   if(file){
@@ -304,10 +328,8 @@ async function saveItem(){
   }
 
   clearItemForm();
-  await loadItems();
 }
 
-/* Item helpers */
 function clearItemForm(){
   $('editItemId').value = '';
   $('itemName').value = '';
@@ -315,17 +337,6 @@ function clearItemForm(){
   $('itemPrice').value = '';
   $('itemCategorySelect').value = '';
   $('itemImage').value = '';
-}
-
-async function loadItems(){
-  const snap = await db.collection('items').get();
-  if(snap.empty){ $('items').innerHTML = '<div class="meta">គ្មានទំនិញ</div>'; return; }
-  const html = snap.docs.map(d => {
-    const it = d.data();
-    const img = it.imageUrl ? `<img class="icon" src="${escapeHtml(it.imageUrl)}" />` : '';
-    return `<div class="list-item"><div style="display:flex;align-items:center">${img}<div><b>${escapeHtml(it.name)}</b><div class="meta">${escapeHtml(it.category||'')}</div><div class="meta">${Number(it.price).toLocaleString()} ៛</div></div></div><div><button onclick="startEdit('${d.id}')">កែ</button> <button onclick="deleteItem('${d.id}')">លុប</button></div></div>`;
-  }).join('');
-  $('items').innerHTML = html;
 }
 
 async function startEdit(id){
@@ -343,7 +354,6 @@ async function startEdit(id){
 async function deleteItem(id){
   if(!confirm('តើអ្នកចង់លុបទំនិញនេះមែនទេ?')) return;
   await db.collection('items').doc(id).delete();
-  await loadItems();
 }
 
 /* ============================
@@ -379,7 +389,6 @@ async function confirmSell(){
 /* ============================
    Reports (grouped + subtotals + exports)
    ============================ */
-let lastReportData = [];
 async function loadReport(period, from='seller'){
   let start = new Date(), end = new Date();
   if(period === 'day') start.setHours(0,0,0,0);
@@ -402,13 +411,12 @@ async function loadReport(period, from='seller'){
 
   const snap = await q.get();
 
-  // subtotals
-  const now = new Date();
+  // calculate subtotals and grouping
   const startToday = new Date(); startToday.setHours(0,0,0,0);
   const startWeek = new Date(); startWeek.setDate(startWeek.getDate() - 7);
   const startMonth = new Date(); startMonth.setMonth(startMonth.getMonth() - 1);
 
-  let todayTotal = 0, weekTotal = 0, monthTotal = 0, grandTotal = 0;
+  let todayTotal=0, weekTotal=0, monthTotal=0, grandTotal=0;
   let grouped = {};
 
   for(const doc of snap.docs){
@@ -503,7 +511,7 @@ function downloadPDF(){
   const doc = new jsPDF();
   doc.setFontSize(16);
   doc.text('របាយការណ៍លក់', 14, 20);
-  const body = lastReportData.map(r => [r['ទំនิញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString() + ' ៛']);
+  const body = lastReportData.map(r => [r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString() + ' ៛']);
   doc.autoTable({ head: [['ទំនិញ','កាលបរិច្ឆេទ','ចំនួន','តម្លៃ']], body, startY: 30 });
   doc.save('report.pdf');
 }
@@ -524,7 +532,7 @@ document.getElementById('refreshBtn').addEventListener('click', ()=>{ location.r
 
 function showHelp(){ alert('Create users in Firebase Auth: admin@store.com and seller@store.com. Enable Email/Password provider.'); }
 
-async function initAfterLogin(){ listenCategories(); await loadItems(); }
+async function initAfterLogin(){ ensureCategoryListener(); ensureItemsListener(); }
 
 </script>
 </body>
