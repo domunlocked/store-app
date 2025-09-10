@@ -4,174 +4,62 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ការគ្រប់គ្រងហាង — Stock Store</title>
-
-  <!-- Khmer Battambang font -->
   <link href="https://fonts.googleapis.com/css2?family=Battambang&display=swap" rel="stylesheet">
-
   <meta name="theme-color" content="#007bff" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
-
   <style>
     :root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#111}
-    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s; -webkit-font-smoothing:antialiased;}
+    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s;}
     body.dark{--bg:#0f1720;--card:#111827;--text:#e6eef8}
-    .wrap{max-width:1000px;margin:12px auto}
-    .topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;align-items:center}
+    .wrap{max-width:800px;margin:12px auto}
+    .topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
     .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.06);margin-bottom:12px}
-    h1,h2,h3{margin:6px 0 12px}
-    input,select,textarea,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #cbd5e1;box-sizing:border-box;font-size:15px}
+    input,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #cbd5e1;font-size:15px}
     button{background:var(--primary);color:#fff;border:none;cursor:pointer}
-    .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--primary);padding:8px;border-radius:8px}
+    button.btn-ghost{background:transparent !important;color:var(--primary) !important;border:1px solid var(--primary) !important;}
     .row{display:flex;gap:8px}
     .row>*{flex:1}
-    .small{padding:6px;font-size:14px}
-    .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(0,0,0,0.06)}
-    .icon{width:48px;height:48px;object-fit:cover;border-radius:8px;margin-right:8px}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left}
-    .meta{color:#6b7280;font-size:13px}
-    @media (max-width:700px){ .row{flex-direction:column} .list-item{flex-direction:column;align-items:flex-start} }
+    .list-item{padding:6px;border-bottom:1px solid #e5e7eb}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <button id="darkToggle" class="btn-ghost small" title="Dark mode toggle">🌙/☀️</button>
-      <button id="refreshBtn" class="btn-ghost small" title="Reload page (full refresh)">🔄 Refresh</button>
-      <button id="installBtn" class="btn-ghost small" style="display:none">Install</button>
+      <button id="darkToggle" class="btn-ghost small">🌙/☀️</button>
+      <button id="refreshBtn" class="btn-ghost small">🔄 Refresh</button>
     </div>
 
-    <!-- LOGIN CARD -->
     <div id="login" class="card">
-      <h1>ការគ្រប់គ្រងហាង</h1>
-      <h3>ចូលប្រព័ន្ធ</h3>
-      <input id="email" placeholder="អ៊ីមែល" autocomplete="username" />
-      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" autocomplete="current-password" />
-      <div class="row">
-        <button id="loginBtn" onclick="login()">ចូល</button>
-        <button class="btn-ghost" onclick="showHelp()">ជំនួយ</button>
-      </div>
-      <p id="loginStatus" class="meta"></p>
-      <p class="meta">សូមបង្កើតអ្នកប្រើនៅ Firebase Console → Authentication (Email/Password)</p>
+      <h2>ចូលប្រព័ន្ធ</h2>
+      <input id="email" placeholder="អ៊ីមែល" />
+      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" />
+      <div class="row"><button onclick="login()">ចូល</button></div>
+      <p id="loginStatus"></p>
     </div>
 
-    <!-- ADMIN PANEL -->
     <div id="admin" class="card" style="display:none">
-      <h2>ផ្ទាំងអ្នកគ្រប់គ្រង (Admin)</h2>
-
+      <h2>Admin</h2>
       <div class="row">
         <button onclick="logout()">ចាកចេញ</button>
         <button class="btn-ghost" onclick="toggleCatManager()">គ្រប់គ្រងប្រភេទ</button>
       </div>
-
       <div id="catManager" style="display:none;margin-top:10px">
-        <h3>គ្រប់គ្រងប្រភេទ (Categories)</h3>
+        <h3>Categories</h3>
         <div class="row">
-          <input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី" />
-          <button id="addCatBtn" onclick="addCategory()">បន្ថែម</button>
+          <input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី"/>
+          <button onclick="addCategory()">បន្ថែម</button>
         </div>
-        <div id="categoriesList" style="margin-top:8px"></div>
+        <div id="categoriesList"></div>
       </div>
-
-      <h3>ទំនិញ (Items)</h3>
-      <input id="itemName" placeholder="ឈ្មោះទំនិញ" />
-      <input id="itemSKU" placeholder="កូដទំនិញ (optional)" />
-      <input id="itemPrice" type="number" placeholder="តម្លៃ (៛)" />
-      <select id="itemCategorySelect"></select>
-      <input id="itemImage" type="file" accept="image/*" />
-      <input id="editItemId" type="hidden" />
-      <div class="row">
-        <button onclick="saveItem()">រក្សាទុក</button>
-        <button class="btn-ghost" onclick="clearItemForm()">សំអាត</button>
-      </div>
-
-      <h3>បញ្ជីទំនិញ</h3>
-      <div id="items"></div>
-
-      <h3 style="margin-top:12px">របាយការណ៍លក់ (Sales Report)</h3>
-      <div class="row">
-        <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
-        <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
-        <button onclick="loadReport('month','admin')">ខែនេះ</button>
-        <button onclick="loadReport('all','admin')">ទាំងអស់</button>
-      </div>
-
-      <div style="margin-top:8px">
-        <div class="row">
-          <input type="date" id="startDate" />
-          <input type="date" id="endDate" />
-        </div>
-        <div class="row">
-          <button onclick="loadReport('custom','admin')">ស្វែងរក</button>
-          <button class="btn-ghost" onclick="clearReport('admin')">លុបរបាយការណ៍</button>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button onclick="downloadExcel()">ទាញចេញជា Excel</button>
-          <button onclick="downloadPDF()">ទាញចេញជា PDF</button>
-        </div>
-      </div>
-
-      <div id="adminReport" style="margin-top:10px"></div>
     </div>
-
-    <!-- SELLER PANEL -->
-    <div id="seller" class="card" style="display:none">
-      <h2>ផ្ទាំងអ្នកលក់ (Seller)</h2>
-      <div class="row"><button onclick="logout()">ចាកចេញ</button></div>
-
-      <h3>ជ្រើសប្រភេទ</h3>
-      <select id="sellCategory" onchange="loadSellItems()"></select>
-
-      <h3>ជ្រើសទំនិញ</h3>
-      <div id="sellItems"></div>
-
-      <input id="sellQty" type="number" placeholder="ចំនួនលក់" />
-      <button onclick="confirmSell()">លក់</button>
-
-      <h3 style="margin-top:12px">របាយការណ៍លក់</h3>
-      <div class="row">
-        <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
-        <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
-        <button onclick="loadReport('month','seller')">ខែនេះ</button>
-        <button onclick="loadReport('all','seller')">ទាំងអស់</button>
-      </div>
-
-      <div style="margin-top:8px">
-        <div class="row">
-          <input type="date" id="startDateSeller" />
-          <input type="date" id="endDateSeller" />
-        </div>
-        <div class="row">
-          <button onclick="loadReport('custom','seller')">ស្វែងរក</button>
-          <button class="btn-ghost" onclick="clearReport('seller')">លុបរបាយការណ៍</button>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button onclick="downloadExcel()">Excel</button>
-          <button onclick="downloadPDF()">PDF</button>
-        </div>
-      </div>
-
-      <div id="report" style="margin-top:10px"></div>
-    </div>
-
   </div>
 
-  <!-- Firebase + libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* ============================
-   Firebase config (user provided)
-   ============================ */
+// Firebase setup
 const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
@@ -181,359 +69,67 @@ const firebaseConfig = {
   appId: "1:1023419430534:web:f13088ef89438326c18307"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
-const $ = id => document.getElementById(id);
+const auth=firebase.auth();const db=firebase.firestore();
 
-/* ============================
-   App state
-   ============================ */
-let categoriesUnsub = null;
-let itemsUnsub = null;
-let lastReportData = [];
-let lastReportRange = null;
-
-/* ============================
-   UI helpers
-   ============================ */
-function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-function showPanel(id){ ['login','admin','seller'].forEach(p=>document.getElementById(p).style.display='none'); document.getElementById(id).style.display='block'; }
-
-/* ============================
-   Auth & login
-   ============================ */
-auth.onAuthStateChanged(user => {
-  if(user){
-    if(user.email === 'admin@store.com'){
-      showPanel('admin'); initAfterLogin();
+// Auth state
+auth.onAuthStateChanged(u=>{
+  if(u){
+    if(u.email==='admin@store.com'){
+      showPanel('admin');
+      listenCategories();
     } else {
-      showPanel('seller'); initAfterLogin();
+      showPanel('login');
     }
   } else {
     showPanel('login');
-    // unsubscribe listeners on logout to avoid duplicates
-    if(categoriesUnsub){ categoriesUnsub(); categoriesUnsub = null; }
-    if(itemsUnsub){ itemsUnsub(); itemsUnsub = null; }
   }
 });
 
-async function login(){
-  const email = $('email').value.trim();
-  const pass = $('password').value.trim();
-  if(!email || !pass){ alert('សូមបញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់'); return; }
-  $('loginBtn').disabled = true; $('loginStatus').innerText = 'កំពុងចូល...';
-  try{
-    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    await auth.signInWithEmailAndPassword(email, pass);
-  }catch(e){
-    alert('ចូលបរាជ័យ: ' + e.message);
-  }finally{
-    $('loginBtn').disabled = false; $('loginStatus').innerText = '';
-  }
+// Auth actions
+function login(){
+  const e=document.getElementById('email').value.trim();
+  const p=document.getElementById('password').value.trim();
+  auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
 }
-function logout(){ auth.signOut(); }
+function logout(){auth.signOut();}
 
-/* ============================
-   Categories (real-time listener)
-   ============================ */
-function ensureCategoryListener(){
-  if(categoriesUnsub) return; // already listening
-  categoriesUnsub = db.collection('categories').orderBy('name').onSnapshot(snap=>{
-    const cats = snap.docs.map(d=>({ id: d.id, name: d.data().name }));
-    // include categories used by items (so sellers can choose)
-    db.collection('items').get().then(itemsSnap=>{
-      itemsSnap.docs.forEach(d=>{ const c = d.data().category; if(c && !cats.find(x=>x.name===c)) cats.push({ id: null, name: c }); });
-      renderCategories(cats);
-    }).catch(()=>renderCategories(cats));
-  }, err => { console.error('categories listen failed', err); });
+// Panels
+function showPanel(id){
+  ['login','admin'].forEach(p=>document.getElementById(p).style.display='none');
+  document.getElementById(id).style.display='block';
 }
 
-function renderCategories(cats){
-  $('sellCategory').innerHTML = cats.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') || '<option>ទទេ</option>';
-  $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
-  $('categoriesList').innerHTML = cats.map(c=>{
-    if(c.id){
-      return `<div class="list-item"><div><b>${escapeHtml(c.name)}</b></div><div><button onclick="editCategory('${c.id}','${escapeHtml(c.name)}')">កែ</button> <button onclick="deleteCategory('${c.id}')">លុប</button></div></div>`;
-    } else {
-      return `<div class="list-item"><div><b>${escapeHtml(c.name)}</b></div><div><button class="btn-ghost" onclick="alert('ប្រភេទនេះមកពីទំនិញ — សូមកែទំនិញផ្ទាល់')">កែ</button></div></div>`;
-    }
-  }).join('');
+// Category Manager toggle
+function toggleCatManager(){
+  const el=document.getElementById('catManager');
+  if(!el) return;
+  el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none';
 }
 
-async function addCategory(){
-  const name = $('newCategory').value.trim();
-  if(!name) return alert('បញ្ចូលឈ្មោះប្រភេទ');
-  // prevent duplicates by name (case-insensitive)
-  const existing = await db.collection('categories').where('name','==',name).get();
-  if(!existing.empty){ alert('ប្រភេទបានមានរួចហើយ'); $('newCategory').value=''; return; }
-  await db.collection('categories').add({ name });
-  $('newCategory').value = '';
-}
-
-function editCategory(id, current){
-  const n = prompt('កែឈ្មោះប្រភេទ:', current);
-  if(!n) return;
-  db.collection('categories').doc(id).update({ name: n });
-}
-
-async function deleteCategory(id){
-  if(!confirm('តើអ្នកចង់លុបប្រភេទនេះមែនទេ?')) return;
-  await db.collection('categories').doc(id).delete();
-}
-
-/* ============================
-   Items (real-time listener)
-   ============================ */
-function ensureItemsListener(){
-  if(itemsUnsub) return;
-  itemsUnsub = db.collection('items').onSnapshot(snap=>{
-    const docs = snap.docs;
-    if(docs.length === 0){ $('items').innerHTML = '<div class="meta">គ្មានទំនិញ</div>'; return; }
-    const html = docs.map(d=>{
-      const it = d.data();
-      const img = it.imageUrl ? `<img class="icon" src="${escapeHtml(it.imageUrl)}" />` : '';
-      return `<div class="list-item"><div style="display:flex;align-items:center">${img}<div><b>${escapeHtml(it.name)}</b><div class="meta">${escapeHtml(it.category||'')}</div><div class="meta">${Number(it.price).toLocaleString()} ៛</div></div></div><div><button onclick="startEdit('${d.id}')">កែ</button> <button onclick="deleteItem('${d.id}')">លុប</button></div></div>`;
-    }).join('');
-    $('items').innerHTML = html;
-  }, err => { console.error('items listen failed', err); });
-}
-
-async function saveItem(){
-  const id = $('editItemId').value.trim();
-  const name = $('itemName').value.trim();
-  const sku = $('itemSKU') ? $('itemSKU').value.trim() : '';
-  const price = parseFloat($('itemPrice').value) || 0;
-  const category = $('itemCategorySelect').value || '';
-  const file = $('itemImage').files[0];
-
-  if(!name) return alert('បញ្ចូលឈ្មោះទំនិញ');
-  if(!category) return alert('សូមជ្រើសប្រភេទ');
-
-  let imageUrl = '';
-  if(file){
-    const ref = storage.ref('items/' + Date.now() + '-' + file.name);
-    await ref.put(file);
-    imageUrl = await ref.getDownloadURL();
-  }
-
-  if(id){
-    const data = { name, sku, price, category };
-    if(imageUrl) data.imageUrl = imageUrl;
-    await db.collection('items').doc(id).update(data);
-    alert('បានកែទំនិញ');
-  } else {
-    await db.collection('items').add({ name, sku, price, category, imageUrl });
-    alert('បានបន្ថែមទំនិញ');
-  }
-
-  clearItemForm();
-}
-
-function clearItemForm(){
-  $('editItemId').value = '';
-  $('itemName').value = '';
-  if($('itemSKU')) $('itemSKU').value = '';
-  $('itemPrice').value = '';
-  $('itemCategorySelect').value = '';
-  $('itemImage').value = '';
-}
-
-async function startEdit(id){
-  const doc = await db.collection('items').doc(id).get();
-  if(!doc.exists) return alert('Item not found');
-  const it = doc.data();
-  $('editItemId').value = id;
-  $('itemName').value = it.name || '';
-  if($('itemSKU')) $('itemSKU').value = it.sku || '';
-  $('itemPrice').value = it.price || '';
-  $('itemCategorySelect').value = it.category || '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-async function deleteItem(id){
-  if(!confirm('តើអ្នកចង់លុបទំនិញនេះមែនទេ?')) return;
-  await db.collection('items').doc(id).delete();
-}
-
-/* ============================
-   Seller flow
-   ============================ */
-async function loadSellItems(){
-  const cat = $('sellCategory').value;
-  if(!cat){ $('sellItems').innerHTML = '<div class="meta">សូមជ្រើសប្រភេទ</div>'; return; }
-  const snap = await db.collection('items').where('category','==',cat).get();
-  if(snap.empty){ $('sellItems').innerHTML = '<div class="meta">គ្មានទំនិញ</div>'; return; }
-  $('sellItems').innerHTML = '<select id="sellItem">' + snap.docs.map(d=>`<option value="${d.id}">${escapeHtml(d.data().name)} — ${Number(d.data().price).toLocaleString()} ៛</option>`).join('') + '</select>';
-}
-
-async function confirmSell(){
-  const sel = $('sellItem');
-  if(!sel) return alert('សូមជ្រើសទំនិញ');
-  const itemId = sel.value;
-  const qty = parseInt($('sellQty').value) || 1;
-  if(qty <= 0) return alert('ចំនួនត្រូវចាប់ពី 1');
-  const doc = await db.collection('items').doc(itemId).get();
-  if(!doc.exists) return alert('ទំនិញមិនមាន');
-  const item = doc.data();
-  await db.collection('sales').add({
-    itemId,
-    itemName: item.name,
-    qty,
-    total: (item.price || 0) * qty,
-    timestamp: firebase.firestore.Timestamp.fromDate(new Date())
+// Firestore category live updates
+function listenCategories(){
+  db.collection('categories').onSnapshot(snap=>{
+    document.getElementById('categoriesList').innerHTML=
+      snap.docs.map(d=>`<div class='list-item'>${d.data().name}</div>`).join('');
   });
-  alert('លក់បានជោគជ័យ');
 }
 
-/* ============================
-   Reports (grouped + subtotals + exports)
-   ============================ */
-async function loadReport(period, from='seller'){
-  let start = new Date(), end = new Date();
-  if(period === 'day') start.setHours(0,0,0,0);
-  if(period === 'week') start.setDate(start.getDate() - 7);
-  if(period === 'month') start.setMonth(start.getMonth() - 1);
-  if(period === 'all') start = new Date(0);
-  if(period === 'custom'){
-    const sVal = (from==='seller')?$('startDateSeller').value:$('startDate').value;
-    const eVal = (from==='seller')?$('endDateSeller').value:$('endDate').value;
-    start = sVal ? new Date(sVal) : new Date(0);
-    end = eVal ? new Date(eVal) : new Date();
-    end.setHours(23,59,59,999);
-  }
-
-  lastReportRange = { start: new Date(start), end: new Date(end) };
-
-  let q = db.collection('sales').where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
-  if(period === 'custom') q = q.where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(end));
-  q = q.orderBy('timestamp', 'desc');
-
-  const snap = await q.get();
-
-  // calculate subtotals and grouping
-  const startToday = new Date(); startToday.setHours(0,0,0,0);
-  const startWeek = new Date(); startWeek.setDate(startWeek.getDate() - 7);
-  const startMonth = new Date(); startMonth.setMonth(startMonth.getMonth() - 1);
-
-  let todayTotal=0, weekTotal=0, monthTotal=0, grandTotal=0;
-  let grouped = {};
-
-  for(const doc of snap.docs){
-    const sale = doc.data();
-    const ts = sale.timestamp && sale.timestamp.toDate ? sale.timestamp.toDate() : new Date();
-    if(ts >= startToday) todayTotal += sale.total || 0;
-    if(ts >= startWeek) weekTotal += sale.total || 0;
-    if(ts >= startMonth) monthTotal += sale.total || 0;
-    grandTotal += sale.total || 0;
-
-    const itemName = sale.itemName || 'មិនស្គាល់';
-    if(!grouped[itemName]) grouped[itemName] = { qty:0, total:0, sales:[] };
-    grouped[itemName].qty += sale.qty || 0;
-    grouped[itemName].total += sale.total || 0;
-    grouped[itemName].sales.push({ date: ts.toLocaleString('km-KH'), qty: sale.qty || 0, total: sale.total || 0 });
-  }
-
-  let html = '';
-  lastReportData = [];
-  Object.keys(grouped).forEach(name => {
-    const g = grouped[name];
-    html += `<div class="card"><b>${escapeHtml(name)}</b><div class="meta">ចំនួន: ${g.qty} • តម្លៃសរុប: ${g.total.toLocaleString()} ៛</div>`;
-    g.sales.forEach(s => {
-      html += `<div style="margin-left:12px">🗓 ${escapeHtml(s.date)} • ចំនួន: ${s.qty} • ${s.total.toLocaleString()} ៛</div>`;
-      lastReportData.push({ ទំនិញ: name, កាលបរិច្ឆេទ: s.date, ចំនួន: s.qty, តម្លៃ: s.total });
-    });
-    html += `</div>`;
-  });
-
-  html += `<div style="font-weight:bold;margin-top:8px">📅 ថ្ងៃនេះ: ${todayTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold">📅 សប្ដាហ៍នេះ: ${weekTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold">📅 ខែនេះ: ${monthTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold;margin-top:6px">សរុប: ${grandTotal.toLocaleString()} ៛</div>`;
-
-  lastReportData.push({ ទំនិញ: 'សរុប', កាលបរិច្ឆេទ: '', ចំនួន: '', តម្លៃ: grandTotal });
-
-  if(from === 'seller') $('report').innerHTML = html;
-  else $('adminReport').innerHTML = html;
+// Add category
+function addCategory(){
+  const name=document.getElementById('newCategory').value.trim();
+  if(!name)return;
+  db.collection('categories').add({name});
+  document.getElementById('newCategory').value='';
 }
 
-/* ============================
-   Clear report -> delete sales in selected range or all
-   ============================ */
-async function clearReport(from){
-  if(!confirm('តើអ្នកចង់លុបទិន្នន័យរបាយការណ៍? នេះមិនអាចដកវិញបាន')) return;
-  try {
-    if(lastReportRange && lastReportRange.start && lastReportRange.end){
-      const q = db.collection('sales')
-        .where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(lastReportRange.start)))
-        .where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(lastReportRange.end)));
-      const snap = await q.get();
-      if(snap.empty){ alert('មិនមានលក់ក្នុងជួរនោះ'); return; }
-      const batch = db.batch();
-      snap.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-      lastReportData = [];
-      if(from === 'seller') $('report').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-      else $('adminReport').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-      alert('លុបជោគជ័យ');
-      return;
-    }
+// UI Toggles
+document.getElementById('darkToggle').addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('darkMode',document.body.classList.contains('dark'));
+});
+if(localStorage.getItem('darkMode')==='true')document.body.classList.add('dark');
 
-    if(!confirm('មិនមានជួរដែលបានទាញយក — នេះនឹងលុបលក់ទាំងអស់! តើបន្ត?')) return;
-    const all = await db.collection('sales').get();
-    if(all.empty){ alert('គ្មានទិន្នន័យ'); return; }
-    const batchAll = db.batch();
-    all.forEach(d => batchAll.delete(d.ref));
-    await batchAll.commit();
-    lastReportData = [];
-    if(from === 'seller') $('report').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-    else $('adminReport').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-    alert('បានលុបទិន្នន័យទាំងអស់');
-  } catch(e){
-    alert('មានបញ្ហា: ' + e.message);
-  }
-}
-
-/* ============================
-   Export (Excel & PDF)
-   ============================ */
-function downloadExcel(){
-  if(!lastReportData.length) return alert('គ្មានទិន្នន័យសម្រាប់ទាញចេញ');
-  const ws = XLSX.utils.json_to_sheet(lastReportData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'របាយការណ៍');
-  XLSX.writeFile(wb, 'report.xlsx');
-}
-
-function downloadPDF(){
-  if(!lastReportData.length) return alert('គ្មានទិន្នន័យសម្រាប់ទាញចេញ');
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text('របាយការណ៍លក់', 14, 20);
-  const body = lastReportData.map(r => [r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString() + ' ៛']);
-  doc.autoTable({ head: [['ទំនិញ','កាលបរិច្ឆេទ','ចំនួន','តម្លៃ']], body, startY: 30 });
-  doc.save('report.pdf');
-}
-
-/* ============================
-   PWA install + utilities
-   ============================ */
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; $('installBtn').style.display = 'inline-block'; });
-$('installBtn').addEventListener('click', async () => { if(!deferredPrompt) return; deferredPrompt.prompt(); const choice = await deferredPrompt.userChoice; if(choice.outcome === 'accepted') $('installBtn').style.display = 'none'; deferredPrompt = null; });
-
-/* Dark mode persistence */
-document.getElementById('darkToggle').addEventListener('click', ()=>{ document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); });
-if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
-
-/* Refresh button - full reload */
-document.getElementById('refreshBtn').addEventListener('click', ()=>{ location.reload(); });
-
-function showHelp(){ alert('Create users in Firebase Auth: admin@store.com and seller@store.com. Enable Email/Password provider.'); }
-
-async function initAfterLogin(){ ensureCategoryListener(); ensureItemsListener(); }
-
+document.getElementById('refreshBtn').addEventListener('click',()=>location.reload());
 </script>
 </body>
 </html>
