@@ -118,6 +118,7 @@
     <button onclick="loadReport('custom','admin')">ស្វែងរក</button><br>
     <button onclick="downloadExcel()">ទាញយកជា Excel</button>
     <button onclick="downloadPDF()">ទាញយកជា PDF</button>
+    <button onclick="clearReport('admin')">លុបរបាយការណ៍</button>
     <div id="adminReport"></div>
   </div>
 
@@ -137,12 +138,13 @@
     <button onclick="loadReport('custom','seller')">ស្វែងរក</button><br>
     <button onclick="downloadExcel()">ទាញយកជា Excel</button>
     <button onclick="downloadPDF()">ទាញយកជា PDF</button>
+    <button onclick="clearReport('seller')">លុបរបាយការណ៍</button>
     <div id="report"></div>
   </div>
 
 <script>
   // ---------------- Firebase Config ----------------
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
   projectId: "stock-store-890d2",
@@ -337,6 +339,16 @@
     }
   }
 
+  // ---------------- Clear Report ----------------
+  function clearReport(from) {
+    lastReportData = [];
+    if (from === "seller") {
+      document.getElementById("report").innerHTML = "";
+    } else {
+      document.getElementById("adminReport").innerHTML = "";
+    }
+  }
+
   // ---------------- Download Excel ----------------
   function downloadExcel() {
     if (!lastReportData.length) return alert("គ្មានទិន្នន័យ!");
@@ -402,13 +414,4 @@
   installBtn.addEventListener("click", async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        installContainer.style.display = "none";
-      }
-      deferredPrompt = null;
-    }
-  });
-</script>
-</body>
-</html>
+      const { outcome } = await deferredPro
