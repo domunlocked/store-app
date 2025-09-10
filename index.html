@@ -2,6 +2,7 @@
 <html lang="km">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ការគ្រប់គ្រងហាង</title>
 
   <!-- KhmerOS Battambang font -->
@@ -51,8 +52,8 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#007bff">
 
-  <!-- iOS Webclip support -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+  <!-- iOS support -->
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -85,6 +86,16 @@
     <button onclick="addItem()">បន្ថែម</button>
     <h3>បញ្ជីទំនិញ</h3>
     <div id="items"></div>
+
+    <!-- 🔹 Admin Sales Report -->
+    <h3>របាយការណ៍លក់</h3>
+    <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
+    <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
+    <button onclick="loadReport('month','admin')">ខែនេះ</button>
+    <button onclick="loadReport('all','admin')">ទាំងអស់</button>
+    <button onclick="downloadExcel()">ទាញយកជា Excel</button>
+    <button onclick="downloadPDF()">ទាញយកជា PDF</button>
+    <div id="adminReport"></div>
   </div>
 
   <!-- Seller Panel -->
@@ -94,10 +105,10 @@
     <h3>លក់ទំនិញ</h3>
     <div id="sellItems"></div>
     <h3>របាយការណ៍លក់</h3>
-    <button onclick="loadReport('day')">ថ្ងៃនេះ</button>
-    <button onclick="loadReport('week')">សប្ដាហ៍នេះ</button>
-    <button onclick="loadReport('month')">ខែនេះ</button>
-    <button onclick="loadReport('all')">ទាំងអស់</button>
+    <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
+    <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
+    <button onclick="loadReport('month','seller')">ខែនេះ</button>
+    <button onclick="loadReport('all','seller')">ទាំងអស់</button>
     <button onclick="downloadExcel()">ទាញយកជា Excel</button>
     <button onclick="downloadPDF()">ទាញយកជា PDF</button>
     <div id="report"></div>
@@ -224,7 +235,7 @@ const firebaseConfig = {
   // ---------------- Reports ----------------
   let lastReportData = [];
 
-  async function loadReport(period) {
+  async function loadReport(period, from = "seller") {
     let startDate = new Date();
     if (period === "day") startDate.setHours(0,0,0,0);
     if (period === "week") startDate.setDate(startDate.getDate() - 7);
@@ -235,8 +246,8 @@ const firebaseConfig = {
       .where("timestamp", ">=", startDate)
       .get();
 
-    let total = 0, html = "";
-    lastReportData = [];
+    let total = 0;
+    let grouped = {}; // 🔹 group by item
 
     for (const doc of snapshot.docs) {
       const sale = doc.data();
@@ -247,17 +258,36 @@ const firebaseConfig = {
         const itemDoc = await db.collection("items").doc(sale.itemId).get();
         if (itemDoc.exists) itemName = itemDoc.data().name;
       }
-      html += `<div>លក់: ${sale.total.toLocaleString()} ៛ | ${itemName} | ចំនួន: ${sale.qty}</div>`;
-      lastReportData.push({
-        ទំនិញ: itemName,
-        ចំនួន: sale.qty,
-        តម្លៃសរុប: sale.total
-      });
+
+      if (!grouped[itemName]) {
+        grouped[itemName] = { qty: 0, total: 0 };
+      }
+      grouped[itemName].qty += sale.qty;
+      grouped[itemName].total += sale.total;
     }
 
-    document.getElementById("report").innerHTML =
-      `សរុប: ${total.toLocaleString()} ៛<br>${html}`;
+    // Build HTML + JSON for export
+    let html = "";
+    lastReportData = [];
+    Object.keys(grouped).forEach(name => {
+      html += `<div>${name} | ចំនួន: ${grouped[name].qty} | តម្លៃសរុប: ${grouped[name].total.toLocaleString()} ៛</div>`;
+      lastReportData.push({
+        ទំនិញ: name,
+        ចំនួន: grouped[name].qty,
+        តម្លៃសរុប: grouped[name].total
+      });
+    });
+
+    // Add total row
+    html += `<b>សរុប: ${total.toLocaleString()} ៛</b>`;
     lastReportData.push({ ទំនិញ: "សរុប", ចំនួន: "", តម្លៃសរុប: total });
+
+    // Show in correct panel
+    if (from === "seller") {
+      document.getElementById("report").innerHTML = html;
+    } else {
+      document.getElementById("adminReport").innerHTML = html;
+    }
   }
 
   // ---------------- Download Excel ----------------
