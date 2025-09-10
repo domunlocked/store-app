@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "store-app-v7-cache-v1";
+const CACHE_NAME = "store-app-v9-cache-v1";
 const URLS_TO_CACHE = [
   "./",
   "./index.html",
