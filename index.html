@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ការគ្រប់គ្រងហាង (PWA)</title>
+  <title>ការគ្រប់គ្រងហាង (Stock Store)</title>
 
-  <!-- Khmer Battambang -->
+  <!-- Khmer font -->
   <link href="https://fonts.googleapis.com/css2?family=Battambang&display=swap" rel="stylesheet">
 
   <meta name="theme-color" content="#007bff" />
@@ -14,102 +14,156 @@
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
 
   <style>
-    :root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#000}
-    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s}
-    body.dark{--bg:#121212;--card:#1e1e1e;--text:#f1f1f1}
-    .wrap{max-width:700px;margin:8px auto}
-    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);margin-bottom:12px}
-    h2,h3{margin:6px 0 10px}
-    input,select,button,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
-    button{background:var(--primary);color:#fff;border:none;cursor:pointer}
-    .row{display:flex;gap:8px}
-    .row> *{flex:1}
-    .small{padding:8px;font-size:14px}
-    .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--primary)}
-    .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(0,0,0,0.06)}
-    img.icon{width:40px;height:40px;border-radius:6px;object-fit:cover;margin-left:8px}
-    pre{white-space:pre-wrap;word-break:break-word}
+    :root{
+      --primary: #007bff;
+      --bg: #f8f9fa;
+      --card: #fff;
+      --text: #111;
+    }
+    body{
+      font-family: 'Battambang', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      transition: background 0.2s, color 0.2s;
+    }
+    body.dark{
+      --bg: #0f1720;
+      --card: #111827;
+      --text: #e6eef8;
+    }
+    .wrap{ max-width: 900px; margin: 10px auto; }
+    .card{
+      background: var(--card);
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(2,6,23,0.06);
+      margin-bottom: 12px;
+    }
+    h2,h3{ margin: 6px 0 12px; }
+    input, select, textarea, button{
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      box-sizing: border-box;
+      font-size: 15px;
+    }
+    button{
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button.btn-ghost{
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+    .row{ display:flex; gap:8px; }
+    .row > *{ flex: 1; }
+    .small { padding: 8px; font-size: 14px; display:inline-block; }
+    .list-item{ display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-bottom:1px solid rgba(0,0,0,0.06); }
+    .meta { color: #6b7280; font-size: 13px; }
+    img.icon { width:48px; height:48px; object-fit:cover; border-radius:8px; margin-left:8px; }
+    .actions button { margin-left:6px; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    @media (max-width:600px){
+      .row { flex-direction: column; }
+      .list-item { flex-direction: column; align-items:flex-start; gap:6px; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div style="text-align:right;margin-bottom:8px">
+
+    <!-- top controls -->
+    <div style="text-align:right; margin-bottom:10px;">
       <button id="darkToggle" class="small">🌙/☀️ Dark Mode</button>
+      <span style="display:inline-block; width:8px;"></span>
+      <button id="installBtn" class="small btn-ghost" style="display:none">ដំឡើងកម្មវិធី</button>
     </div>
 
-    <!-- LOGIN -->
+    <!-- LOGIN CARD -->
     <div id="login" class="card">
       <h2>ចូលប្រព័ន្ធ</h2>
-      <input id="email" placeholder="អ៊ីមែល (admin@store.com or seller@store.com)" />
-      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" />
+      <input id="email" placeholder="អ៊ីមែល" autocomplete="username" />
+      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" autocomplete="current-password" />
       <div class="row">
-        <button onclick="login()">ចូល</button>
-        <button class="btn-ghost" onclick="createDemoUsers()">Create demo users</button>
+        <button id="loginBtn" onclick="login()">ចូល</button>
+        <button class="btn-ghost" onclick="showHelp()">ជំនួយ</button>
       </div>
-      <p style="font-size:13px;color:#666">Enable Email/Password in Firebase Auth and put your Firebase config below.</p>
+      <p id="loginStatus" class="meta"></p>
+      <p class="meta">** សូមបង្កើតអ្នកប្រើ (admin/seller) ដោយដៃនៅ Firebase Console → Authentication → Users **</p>
     </div>
 
-    <!-- ADMIN -->
+    <!-- ADMIN CARD -->
     <div id="admin" class="card" style="display:none">
       <h2>ផ្ទាំងអ្នកគ្រប់គ្រង</h2>
       <div class="row">
-        <button onclick="logout()">ចេញ</button>
-        <button onclick="toggleCatManager()" class="btn-ghost">Manage Categories</button>
+        <button onclick="logout()">ចូលចេញ</button>
+        <button class="btn-ghost" onclick="toggleCatManager()">គ្រប់គ្រងប្រភេទ</button>
       </div>
 
-      <div id="catManager" style="display:none;margin-top:8px">
+      <!-- Category manager -->
+      <div id="catManager" style="display:none; margin-top:10px;">
         <h3>គ្រប់គ្រងប្រភេទ</h3>
         <div class="row">
           <input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី" />
           <button onclick="addCategory()">បន្ថែម</button>
         </div>
-        <div id="categoriesList"></div>
+        <div id="categoriesList" style="margin-top:8px;"></div>
       </div>
 
+      <!-- Item form -->
       <h3>បន្ថែម / កែទំនិញ</h3>
       <input id="itemName" placeholder="ឈ្មោះទំនិញ" />
-      <input id="itemSKU" placeholder="កូដទំនិញ (optional)" />
+      <input id="itemSKU" placeholder="កូដទំនិញ (Optional)" />
       <input id="itemPrice" type="number" placeholder="តម្លៃ (៛)" />
       <select id="itemCategorySelect"></select>
       <input id="itemImage" type="file" accept="image/*" />
       <input id="editItemId" type="hidden" />
       <div class="row">
         <button onclick="saveItem()">រក្សាទុក</button>
-        <button class="btn-ghost" onclick="clearItemForm()">ស្រាល</button>
+        <button class="btn-ghost" onclick="clearItemForm()">សំអាត</button>
       </div>
 
       <h3>បញ្ជីទំនិញ</h3>
       <div id="items"></div>
 
-      <h3>របាយការណ៍លក់ (Admin)</h3>
+      <h3 style="margin-top:12px">របាយការណ៍លក់ (Admin)</h3>
       <div class="row">
         <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
         <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
         <button onclick="loadReport('month','admin')">ខែនេះ</button>
         <button onclick="loadReport('all','admin')">ទាំងអស់</button>
       </div>
-      <div style="margin-top:8px">
+
+      <div style="margin-top:8px;">
         <div class="row">
-          <input type="date" id="startDate">
-          <input type="date" id="endDate">
+          <input type="date" id="startDate" />
+          <input type="date" id="endDate" />
         </div>
         <div class="row">
           <button onclick="loadReport('custom','admin')">ស្វែងរក</button>
           <button class="btn-ghost" onclick="clearReport('admin')">លុបរបាយការណ៍</button>
         </div>
-        <div class="row" style="margin-top:6px">
-          <button onclick="downloadExcel()">Excel</button>
-          <button onclick="downloadPDF()">PDF</button>
+        <div class="row" style="margin-top:8px;">
+          <button onclick="downloadExcel()">ទាញចេញជា Excel</button>
+          <button onclick="downloadPDF()">ទាញចេញជា PDF</button>
         </div>
       </div>
-      <div id="adminReport"></div>
+
+      <div id="adminReport" style="margin-top:10px;"></div>
     </div>
 
-    <!-- SELLER -->
+    <!-- SELLER CARD -->
     <div id="seller" class="card" style="display:none">
       <h2>ផ្ទាំងអ្នកលក់</h2>
       <div class="row">
-        <button onclick="logout()">ចេញ</button>
+        <button onclick="logout()">ចូលចេញ</button>
       </div>
 
       <h3>ជ្រើសប្រភេទ</h3>
@@ -118,10 +172,10 @@
       <h3>ជ្រើសទំនិញ</h3>
       <div id="sellItems"></div>
 
-      <input id="sellQty" type="number" placeholder="ចំនួនលក់ (ឧ. 3)" />
+      <input id="sellQty" type="number" placeholder="ចំនួនលក់" />
       <button onclick="confirmSell()">លក់</button>
 
-      <h3>របាយការណ៍លក់ (Seller)</h3>
+      <h3 style="margin-top:12px">របាយការណ៍លក់ (Seller)</h3>
       <div class="row">
         <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
         <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
@@ -131,21 +185,22 @@
 
       <div style="margin-top:8px">
         <div class="row">
-          <input type="date" id="startDateSeller">
-          <input type="date" id="endDateSeller">
+          <input type="date" id="startDateSeller" />
+          <input type="date" id="endDateSeller" />
         </div>
         <div class="row">
           <button onclick="loadReport('custom','seller')">ស្វែងរក</button>
           <button class="btn-ghost" onclick="clearReport('seller')">លុបរបាយការណ៍</button>
         </div>
-        <div class="row" style="margin-top:6px">
+        <div class="row" style="margin-top:8px;">
           <button onclick="downloadExcel()">Excel</button>
           <button onclick="downloadPDF()">PDF</button>
         </div>
       </div>
 
-      <div id="report"></div>
+      <div id="report" style="margin-top:10px;"></div>
     </div>
+
   </div>
 
   <!-- Firebase SDKs -->
@@ -154,17 +209,15 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-  <!-- XLSX + jsPDF -->
+  <!-- XLSX & jsPDF for export -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-/* =======================
-   FIREBASE CONFIG: REPLACE
-   =======================
-   Put your Firebase project config below.
-*/
+/* ============================
+   FIREBASE CONFIG (your keys)
+   ============================ */
 const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
@@ -173,153 +226,155 @@ const firebaseConfig = {
   messagingSenderId: "1023419430534",
   appId: "1:1023419430534:web:f13088ef89438326c18307"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
-
-// short helper
 const $ = id => document.getElementById(id);
 
-// track last viewed report range (for targeted delete)
-let lastReportRange = null; // {start: Date, end: Date}
+/* ============================
+   STATE
+   ============================ */
+let lastReportData = [];     // data exported
+let lastReportRange = null;  // {start:Date, end:Date} used by clearReport
 
-// dark mode
-$('darkToggle').addEventListener('click', ()=>{
-  document.body.classList.toggle('dark');
-  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-});
-if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+/* ============================
+   UI helpers
+   ============================ */
+function showPanel(id){
+  ['login','admin','seller'].forEach(p => document.getElementById(p).style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
 
-// Auth state
+/* ============================
+   AUTH / LOGIN
+   ============================ */
 auth.onAuthStateChanged(user => {
-  if (user) {
-    if (user.email === 'admin@store.com') {
-      $('admin').style.display = 'block';
-      $('seller').style.display = 'none';
-      $('login').style.display = 'none';
+  if(user){
+    // show admin for admin@store.com
+    if(user.email === 'admin@store.com'){
+      showPanel('admin');
       loadItems();
       loadCategories();
     } else {
-      $('seller').style.display = 'block';
-      $('admin').style.display = 'none';
-      $('login').style.display = 'none';
+      showPanel('seller');
       loadCategories();
     }
   } else {
-    $('login').style.display = 'block';
-    $('admin').style.display = 'none';
-    $('seller').style.display = 'none';
+    showPanel('login');
   }
 });
 
-// create demo users (call once)
-async function createDemoUsers(){
-  try {
-    await auth.createUserWithEmailAndPassword('admin@store.com','admin123').catch(()=>{});
-    await auth.createUserWithEmailAndPassword('seller@store.com','seller123').catch(()=>{});
-    alert('Demo users ensured:\nadmin@store.com / admin123\nseller@store.com / seller123');
-  } catch(e) {
-    alert('Error creating demo user: ' + e.message);
-  }
-}
-
-// login
 async function login(){
   const email = $('email').value.trim();
   const pass = $('password').value.trim();
-  if (!email || !pass) return alert('បញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់');
-  try {
+  if(!email || !pass){
+    alert('សូមបញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់');
+    return;
+  }
+  $('loginBtn').disabled = true;
+  $('loginStatus').innerText = 'កំពុងចូល...';
+  try{
+    // keep local persistence for "remember me"
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     await auth.signInWithEmailAndPassword(email, pass);
+    // onAuthStateChanged will handle UI
   } catch(e) {
     alert('ចូលបរាជ័យ: ' + e.message);
+  } finally {
+    $('loginBtn').disabled = false;
+    $('loginStatus').innerText = '';
   }
 }
-function logout(){ auth.signOut(); }
 
-/* =========================
-   CATEGORIES (admin manager)
-   ========================= */
-function toggleCatManager(){
-  const el = $('catManager');
-  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+function logout(){
+  auth.signOut();
 }
 
+/* ============================
+   CATEGORIES
+   ============================ */
 async function addCategory(){
   const name = $('newCategory').value.trim();
-  if (!name) return alert('បញ្ចូលឈ្មោះប្រភេទ');
+  if(!name) { alert('បញ្ចូលឈ្មោះប្រភេទ'); return; }
   await db.collection('categories').add({ name });
   $('newCategory').value = '';
   await loadCategories();
 }
 
 async function loadCategories(){
-  // load categories from categories collection
+  // Load categories from 'categories' collection
   const snap = await db.collection('categories').get();
   let cats = snap.docs.map(d => ({ id: d.id, name: d.data().name }));
-  // ensure categories that exist only on items are included
+
+  // Also include categories that exist only on items
   const itemsSnap = await db.collection('items').get();
-  itemsSnap.docs.forEach(d=>{
+  itemsSnap.docs.forEach(d => {
     const c = d.data().category;
-    if(c && !cats.find(x=>x.name===c)) cats.push({ id: null, name: c });
+    if(c && !cats.find(x => x.name === c)) cats.push({ id: null, name: c});
   });
-  // populate selects
-  $('sellCategory').innerHTML = cats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('') || '<option value="">ទទេ</option>';
-  $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
-  // render category list
-  $('categoriesList').innerHTML = cats.map(c=>`<div class="list-item"><div>${c.name}</div><div>
-    <button onclick="editCategory('${c.id||''}','${c.name}')">កែ</button>
-    <button onclick="deleteCategory('${c.id||''}')">លុប</button>
-  </div></div>`).join('');
+
+  // populate sellCategory and itemCategorySelect
+  $('sellCategory').innerHTML = cats.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') || '<option value="">ទទេ</option>';
+  $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+
+  // render category list (allow edit/delete if id present)
+  $('categoriesList').innerHTML = cats.map(c => {
+    const idAttr = c.id ? `data-id="${c.id}"` : '';
+    return `<div class="list-item"><div>${escapeHtml(c.name)}</div><div>
+      ${c.id ? `<button onclick="editCategory('${c.id}','${escapeJs(c.name)}')">កែ</button>` : `<button class="btn-ghost" onclick="alert('Category created from items; edit items instead')">កែ</button>`}
+      ${c.id ? `<button onclick="deleteCategory('${c.id}')">លុប</button>` : ''}
+    </div></div>`;
+  }).join('');
 }
 
-function editCategory(id,name){
+function editCategory(id, name){
   const newName = prompt('កែឈ្មោះប្រភេទ:', name);
   if(!newName) return;
-  if(id) {
-    db.collection('categories').doc(id).update({ name: newName }).then(()=>loadCategories());
-  } else {
-    alert('ប្រភេទនេះមកពីទំនិញ។ សូមកែឈ្មោះដោយកែទំនិញ។');
-  }
+  db.collection('categories').doc(id).update({ name: newName }).then(loadCategories);
 }
 
 async function deleteCategory(id){
-  if(!id) return alert('មិនអាចលុបទ្រង់ទ្រាយដែលបានបង្កើតពីទំនិញ');
-  if(!confirm('អ្នកចង់លុបប្រភេទនេះឬ?')) return;
+  if(!confirm('តើអ្នកចង់លុបប្រភេទនេះមែនទេ?')) return;
   await db.collection('categories').doc(id).delete();
-  loadCategories();
+  await loadCategories();
 }
 
-/* =========================
-   ITEMS (admin add/edit/delete)
-   ========================= */
+/* ============================
+   ITEMS (Admin)
+   ============================ */
 async function saveItem(){
   const id = $('editItemId').value.trim();
   const name = $('itemName').value.trim();
-  const sku = $('itemSKU').value.trim();
+  const sku = $('itemSKU') ? $('itemSKU').value.trim() : '';
   const price = parseFloat($('itemPrice').value) || 0;
   const category = $('itemCategorySelect').value || '';
   const file = $('itemImage').files[0];
 
-  if(!name) return alert('បញ្ចូលឈ្មោះទំនិញ');
+  if(!name){
+    alert('បញ្ចូលឈ្មោះទំនិញ');
+    return;
+  }
 
   let imageUrl = '';
   if(file){
+    // upload to storage
     const ref = storage.ref('items/' + Date.now() + '-' + file.name);
-    await ref.put(file);
+    const uploadTask = await ref.put(file);
     imageUrl = await ref.getDownloadURL();
   }
 
   if(id){
-    const data = { name, sku, price, category };
-    if(imageUrl) data.imageUrl = imageUrl;
-    await db.collection('items').doc(id).update(data);
-    alert('Item updated');
+    const updateData = { name, sku, price, category };
+    if(imageUrl) updateData.imageUrl = imageUrl;
+    await db.collection('items').doc(id).update(updateData);
+    alert('បានកែទំនិញ');
   } else {
     await db.collection('items').add({ name, sku, price, category, imageUrl });
-    alert('Item added');
+    alert('បានបន្ថែមទំនិញ');
   }
+
   clearItemForm();
   await loadItems();
   await loadCategories();
@@ -328,7 +383,7 @@ async function saveItem(){
 function clearItemForm(){
   $('editItemId').value = '';
   $('itemName').value = '';
-  $('itemSKU').value = '';
+  if($('itemSKU')) $('itemSKU').value = '';
   $('itemPrice').value = '';
   $('itemCategorySelect').value = '';
   $('itemImage').value = '';
@@ -337,14 +392,20 @@ function clearItemForm(){
 async function loadItems(){
   const snap = await db.collection('items').get();
   if(snap.empty){ $('items').innerHTML = '<div>គ្មានទំនិញ</div>'; return; }
-  $('items').innerHTML = snap.docs.map(d=>{
+  const html = snap.docs.map(d => {
     const it = d.data();
-    return `<div class="list-item"><div><b>${it.name}</b><div style="color:#666">${it.category||''} • ${Number(it.price).toLocaleString()} ៛</div></div>
-      <div>
+    const img = it.imageUrl ? `<img class="icon" src="${escapeHtml(it.imageUrl)}" />` : '';
+    return `<div class="list-item">
+      <div style="display:flex;align-items:center;">
+        ${img}<div style="margin-left:8px;"><b>${escapeHtml(it.name)}</b><div class="meta">${escapeHtml(it.category||'')}</div><div class="meta">${Number(it.price).toLocaleString()} ៛</div></div>
+      </div>
+      <div class="actions">
         <button onclick="startEdit('${d.id}')">កែ</button>
         <button onclick="deleteItem('${d.id}')">លុប</button>
-      </div></div>`;
+      </div>
+    </div>`;
   }).join('');
+  $('items').innerHTML = html;
 }
 
 async function startEdit(id){
@@ -353,38 +414,43 @@ async function startEdit(id){
   const it = doc.data();
   $('editItemId').value = id;
   $('itemName').value = it.name || '';
-  $('itemSKU').value = it.sku || '';
+  if($('itemSKU')) $('itemSKU').value = it.sku || '';
   $('itemPrice').value = it.price || '';
   $('itemCategorySelect').value = it.category || '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function deleteItem(id){
-  if(!confirm('លុបទំនិញនេះឬ?')) return;
+  if(!confirm('តើអ្នកចង់លុបទំនិញនេះមែនទេ?')) return;
   await db.collection('items').doc(id).delete();
-  loadItems(); loadCategories();
+  await loadItems();
+  await loadCategories();
 }
 
-/* =========================
-   SELLER FLOW
-   ========================= */
+/* ============================
+   SELLER: choose category -> items -> sell qty
+   ============================ */
 async function loadSellItems(){
   const cat = $('sellCategory').value;
+  if(!cat){ $('sellItems').innerHTML = '<div>សូមជ្រើសប្រភេទ</div>'; return; }
   const snap = await db.collection('items').where('category','==',cat).get();
   if(snap.empty){ $('sellItems').innerHTML = '<div>គ្មានទំនិញ</div>'; return; }
-  $('sellItems').innerHTML = '<select id="sellItem">' + snap.docs.map(d=>`<option value="${d.id}">${d.data().name} - ${Number(d.data().price).toLocaleString()} ៛</option>`).join('') + '</select>';
+  const options = snap.docs.map(d => {
+    const it = d.data();
+    return `<option value="${d.id}">${escapeHtml(it.name)} — ${Number(it.price).toLocaleString()} ៛</option>`;
+  }).join('');
+  $('sellItems').innerHTML = `<select id="sellItem">${options}</select>`;
 }
 
 async function confirmSell(){
   const sel = $('sellItem');
-  if(!sel) return alert('ជ្រើសទំនិញមុន');
+  if(!sel){ alert('សូមជ្រើសទំនិញមុន'); return; }
   const itemId = sel.value;
   const qty = parseInt($('sellQty').value) || 1;
-  if(qty <= 0) return alert('ចំនួនត្រូវចាប់ពី 1 ឡើង');
+  if(qty <= 0){ alert('ចំនួនត្រូវបើកពី 1'); return; }
   const itemDoc = await db.collection('items').doc(itemId).get();
-  if(!itemDoc.exists) return alert('Item missing');
+  if(!itemDoc.exists) { alert('ទំនិញមិនមាន'); return; }
   const item = itemDoc.data();
-  // use Firestore Timestamp
   await db.collection('sales').add({
     itemId,
     qty,
@@ -394,20 +460,21 @@ async function confirmSell(){
   alert('លក់បានជោគជ័យ!');
 }
 
-/* =========================
-   REPORTS (grouped + date + summaries)
-   ========================= */
-let lastReportData = [];
-// lastReportRange = { start: Date, end: Date } set in loadReport
+/* ============================
+   REPORTS: grouped + subtotals (today/week/month)
+   ============================ */
+function toKhmerNumber(n){
+  try { return Number(n).toLocaleString('km-KH'); } catch(e){ return n; }
+}
 
 async function loadReport(period, from='seller'){
-  // compute start/end
-  let start = new Date(), end = new Date();
+  // compute start/end dates
+  let start = new Date();
+  let end = new Date();
   if(period === 'day'){ start.setHours(0,0,0,0); }
   if(period === 'week'){ start.setDate(start.getDate() - 7); }
   if(period === 'month'){ start.setMonth(start.getMonth() - 1); }
   if(period === 'all'){ start = new Date(0); }
-
   if(period === 'custom'){
     const sVal = (from === 'seller') ? $('startDateSeller').value : $('startDate').value;
     const eVal = (from === 'seller') ? $('endDateSeller').value : $('endDate').value;
@@ -416,34 +483,33 @@ async function loadReport(period, from='seller'){
     end.setHours(23,59,59,999);
   }
 
-  // store lastReportRange for clearReport action
+  // store range for clearReport
   lastReportRange = { start: new Date(start), end: new Date(end) };
 
-  // query using Firestore Timestamp bounds
+  // Build query using Timestamp bounds
   let q = db.collection('sales').where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(start));
   if(period === 'custom'){
     q = q.where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(end));
   }
-
-  // orderBy requires same field
-  q = q.orderBy('timestamp','desc');
+  // orderBy timestamp requires the field used in where() - good
+  q = q.orderBy('timestamp', 'desc');
 
   const snap = await q.get();
 
-  // subtotals: today/week/month (relative to now)
+  // compute subtotals relative to now
   const now = new Date();
   const startToday = new Date(); startToday.setHours(0,0,0,0);
   const startWeek = new Date(); startWeek.setDate(startWeek.getDate() - 7);
   const startMonth = new Date(); startMonth.setMonth(startMonth.getMonth() - 1);
+
   let todayTotal = 0, weekTotal = 0, monthTotal = 0;
-
   let total = 0;
-  let grouped = {};
+  let grouped = {}; // { name: { qty, total, sales:[{date,qty,total}] } }
 
+  // iterate sales
   for(const doc of snap.docs){
     const sale = doc.data();
-    // sale.timestamp is Firestore Timestamp
-    const ts = sale.timestamp && sale.timestamp.toDate ? sale.timestamp.toDate() : new Date(sale.timestamp);
+    const ts = sale.timestamp && sale.timestamp.toDate ? sale.timestamp.toDate() : new Date();
     if(ts >= startToday) todayTotal += sale.total || 0;
     if(ts >= startWeek) weekTotal += sale.total || 0;
     if(ts >= startMonth) monthTotal += sale.total || 0;
@@ -452,98 +518,99 @@ async function loadReport(period, from='seller'){
 
     let itemName = 'មិនស្គាល់';
     if(sale.itemId){
-      const it = await db.collection('items').doc(sale.itemId).get();
-      if(it.exists) itemName = it.data().name;
+      const itDoc = await db.collection('items').doc(sale.itemId).get();
+      if(itDoc.exists) itemName = itDoc.data().name;
     }
-    if(!grouped[itemName]) grouped[itemName] = { qty:0, total:0, sales:[] };
+    if(!grouped[itemName]) grouped[itemName] = { qty: 0, total: 0, sales: [] };
     grouped[itemName].qty += sale.qty || 0;
     grouped[itemName].total += sale.total || 0;
-    grouped[itemName].sales.push({ date: ts.toLocaleString('km-KH'), qty: sale.qty || 0, total: sale.total || 0 });
+    grouped[itemName].sales.push({
+      date: ts.toLocaleString('km-KH'),
+      qty: sale.qty || 0,
+      total: sale.total || 0
+    });
   }
 
-  // build HTML and lastReportData for export
+  // build html and lastReportData for export
   let html = '';
   lastReportData = [];
 
-  Object.keys(grouped).forEach(name=>{
-    html += `<div class="card"><b>${name}</b><div>ចំនួន៖ ${grouped[name].qty} • តម្លៃសរុប៖ ${grouped[name].total.toLocaleString()} ៛</div>`;
-    grouped[name].sales.forEach(s=>{
-      html += `<div style="margin-left:12px">🗓 ${s.date} • ចំនួន: ${s.qty} • ${s.total.toLocaleString()} ៛</div>`;
+  // For each grouped item
+  Object.keys(grouped).forEach(name => {
+    const g = grouped[name];
+    html += `<div class="card"><b>${escapeHtml(name)}</b><div class="meta">ចំនួន: ${g.qty} • តម្លៃសរុប: ${g.total.toLocaleString()} ៛</div>`;
+    g.sales.forEach(s => {
+      html += `<div style="margin-left:12px">🗓 ${escapeHtml(s.date)} • ចំនួន: ${s.qty} • ${Number(s.total).toLocaleString()} ៛</div>`;
       lastReportData.push({ ទំនិញ: name, កាលបរិច្ឆេទ: s.date, ចំនួន: s.qty, តម្លៃ: s.total });
     });
     html += `</div>`;
   });
 
-  // add subtotals and grand total
-  html += `<div style="font-weight:bold;margin-top:8px">📅 ថ្ងៃនេះ: ${todayTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold">📅 សប្ដាហ៍នេះ: ${weekTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold">📅 ខែនេះ: ${monthTotal.toLocaleString()} ៛</div>`;
-  html += `<div style="font-weight:bold;margin-top:6px">សរុប: ${total.toLocaleString()} ៛</div>`;
+  // subtotals and grand total
+  html += `<div style="font-weight:bold;margin-top:8px">📅 ថ្ងៃនេះ: ${toKhmerNumber(todayTotal)} ៛</div>`;
+  html += `<div style="font-weight:bold">📅 សប្ដាហ៍នេះ: ${toKhmerNumber(weekTotal)} ៛</div>`;
+  html += `<div style="font-weight:bold">📅 ខែនេះ: ${toKhmerNumber(monthTotal)} ៛</div>`;
+  html += `<div style="font-weight:bold;margin-top:6px">សរុប: ${toKhmerNumber(total)} ៛</div>`;
 
   lastReportData.push({ ទំនិញ: 'សរុប', កាលបរិច្ឆេទ: '', ចំនួន: '', តម្លៃ: total });
 
-  // show in correct panel
+  // display
   if(from === 'seller') $('report').innerHTML = html;
   else $('adminReport').innerHTML = html;
 }
 
-/* =========================
-   CLEAR REPORT (delete sales)
-   =========================
-   Deletes the sales documents that fall inside the last viewed report range.
-   If lastReportRange is null, it will ask and delete ALL sales.
-*/
+/* ============================
+   CLEAR REPORT -> delete sales in range (or all)
+   ============================ */
 async function clearReport(from){
-  if(!confirm('តើអ្នកចង់លុបទិន្នន័យរបាយការណ៍ (sales) មែនទេ? នេះមិនអាចដកសងវិញបានទេ។')) return;
+  if(!confirm('តើអ្នកពិតជាចង់លុបទិន្នន័យរបាយការណ៍? នេះមិនអាចដកវិញបានទេ។')) return;
 
   try {
-    let start = null, end = null;
-    if(lastReportRange && lastReportRange.start && lastReportRange.end) {
-      start = lastReportRange.start;
-      end = lastReportRange.end;
-    }
-
-    if(!start || !end){
-      // delete all sales
-      const all = await db.collection('sales').get();
-      const batchAll = db.batch();
-      all.forEach(d => batchAll.delete(d.ref));
-      await batchAll.commit();
+    if(lastReportRange && lastReportRange.start && lastReportRange.end){
+      // delete only sales within range
+      const q = db.collection('sales')
+        .where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(lastReportRange.start)))
+        .where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(lastReportRange.end)));
+      const snap = await q.get();
+      if(snap.empty){
+        alert('មិនមានលក់ក្នុងជួរនោះទេ។');
+        return;
+      }
+      const batch = db.batch();
+      snap.forEach(d => batch.delete(d.ref));
+      await batch.commit();
       lastReportData = [];
       if(from === 'seller') $('report').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
       else $('adminReport').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-      alert('All sales deleted.');
+      alert('បានលុបរបាយការណ៍ក្នុងជួរដែលបានជ្រើស។');
       return;
     }
 
-    // delete only sales within range
-    const q = db.collection('sales')
-      .where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(start)))
-      .where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(end)));
-
-    const snap = await q.get();
-    if(snap.empty){
-      alert('No sales found in the selected range.');
+    // if no range, delete all sales
+    if(!confirm('មិនមានជួរដែលបានទាញយក — នេះនឹងលុបលក់ទាំងអស់! តើបន្ត?')) return;
+    const allSnap = await db.collection('sales').get();
+    if(allSnap.empty){
+      alert('មិនមានទិន្នន័យដើម្បីលុប។');
       return;
     }
-    const batch = db.batch();
-    snap.forEach(d => batch.delete(d.ref));
-    await batch.commit();
-
+    const batchAll = db.batch();
+    allSnap.forEach(d => batchAll.delete(d.ref));
+    await batchAll.commit();
     lastReportData = [];
     if(from === 'seller') $('report').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
     else $('adminReport').innerHTML = 'ទិន្នន័យបានលុបហើយ ✅';
-    alert('Sales in the selected range deleted.');
+    alert('បានលុបទិន្នន័យលក់ទាំងអស់។');
+
   } catch(e){
     alert('មានបញ្ហាក្នុងការលុប: ' + e.message);
   }
 }
 
-/* =========================
-   EXPORTS
-   ========================= */
+/* ============================
+   EXPORTS: Excel & PDF
+   ============================ */
 function downloadExcel(){
-  if(!lastReportData.length) return alert('គ្មានទិន្នន័យ');
+  if(!lastReportData.length) return alert('គ្មានទិន្នន័យសម្រាប់ទាញចេញ');
   const ws = XLSX.utils.json_to_sheet(lastReportData);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'របាយការណ៍');
@@ -551,30 +618,70 @@ function downloadExcel(){
 }
 
 function downloadPDF(){
-  if(!lastReportData.length) return alert('គ្មានទិន្នន័យ');
+  if(!lastReportData.length) return alert('គ្មានទិន្នន័យសម្រាប់ទាញចេញ');
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  doc.setFontSize(16);
   doc.text('របាយការណ៍លក់', 14, 20);
-  const body = lastReportData.map(r => [r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString() + ' ៛']);
+  const body = lastReportData.map(r => [ r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString() + ' ៛' ]);
   doc.autoTable({ head: [['ទំនិញ','កាលបរិច្ឆេទ','ចំនួន','តម្លៃ']], body, startY: 30 });
   doc.save('report.pdf');
 }
 
-/* =========================
-   PWA / SW registration
-   ========================= */
+/* ============================
+   PWA / Service Worker / Install prompt
+   ============================ */
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js').then(()=>console.log('SW registered')).catch(()=>console.log('SW failed'));
 }
 
-/* Optional: Install prompt handling (deferredPrompt not shown to user by default) */
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
+  $('installBtn').style.display = 'inline-block';
 });
-window.addEventListener('appinstalled', ()=>{ console.log('app installed'); });
 
+$('installBtn').addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const choice = await deferredPrompt.userChoice;
+  if(choice.outcome === 'accepted') $('installBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+
+/* ============================
+   UTILITIES
+   ============================ */
+function escapeHtml(s){
+  if(!s && s !== 0) return '';
+  return String(s)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'", '&#39;');
+}
+function escapeJs(s){
+  if(!s && s !== 0) return '';
+  return String(s).replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+/* ============================
+   INITIAL LOADS
+   ============================ */
+document.getElementById('darkToggle').addEventListener('click', ()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+});
+if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+
+// initial populate categories & items for UI goodness
+// (only visible after login via auth.onAuthStateChanged)
+async function initAfterLogin(){
+  await loadCategories();
+  await loadItems();
+}
 </script>
 </body>
 </html>
