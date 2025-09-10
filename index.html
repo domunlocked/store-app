@@ -1,65 +1,186 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ការគ្រប់គ្រងហាង — Stock Store</title>
-  <link href="https://fonts.googleapis.com/css2?family=Battambang&display=swap" rel="stylesheet">
-  <meta name="theme-color" content="#007bff" />
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    :root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#111}
-    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s;}
-    body.dark{--bg:#0f1720;--card:#111827;--text:#e6eef8}
-    .wrap{max-width:800px;margin:12px auto}
-    .topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
-    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.06);margin-bottom:12px}
-    input,button{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #cbd5e1;font-size:15px}
-    button{background:var(--primary);color:#fff;border:none;cursor:pointer}
-    button.btn-ghost{background:transparent !important;color:var(--primary) !important;border:1px solid var(--primary) !important;}
-    .row{display:flex;gap:8px}
-    .row>*{flex:1}
-    .list-item{padding:6px;border-bottom:1px solid #e5e7eb}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="topbar">
-      <button id="darkToggle" class="btn-ghost small">🌙/☀️</button>
-      <button id="refreshBtn" class="btn-ghost small">🔄 Refresh</button>
-    </div>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ការគ្រប់គ្រងហាង — Stock Store (Long Build)</title>
+<link href="https://fonts.googleapis.com/css2?family=Battambang&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#007bff" />
+<link rel="manifest" href="manifest.json" />
+<style>
+:root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#111;--muted:#6b7280}
+*{box-sizing:border-box}html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);font-family:'Battambang',sans-serif}
+.wrap{max-width:1100px;margin:12px auto;padding:6px}
+.topbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;align-items:center}
+.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 24px rgba(2,6,23,0.06);margin-bottom:14px}
+h1,h2,h3{margin:8px 0}
+input,select,textarea,button{font-size:14px;border-radius:8px;padding:10px;border:1px solid #cbd5e1}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer}
+button.btn-ghost{background:transparent !important;color:var(--primary) !important;border:1px solid var(--primary) !important}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.list-item{padding:8px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+.meta{color:var(--muted);font-size:13px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid .full{grid-column:1/-1}
+.big-btn{padding:12px 16px;border-radius:10px;font-weight:600}
+.small{padding:6px;font-size:13px}
+.note{font-size:13px;color:var(--muted);margin-top:6px}
+@media (max-width:900px){.form-grid{grid-template-columns:1fr}.row{flex-direction:column}}
+</style>
+</head><body><div class="wrap">
+<div class="topbar card" role="navigation" aria-label="Top actions">
+  <div style="flex:1"></div>
+  <button id="darkToggle" class="btn-ghost small">🌙/☀️ Dark Mode</button>
+  <button id="refreshBtn" class="btn-ghost small">🔄 Refresh</button>
+  <button id="installBtn" class="btn-ghost small" style="display:none">Install</button>
+</div>
 
-    <div id="login" class="card">
-      <h2>ចូលប្រព័ន្ធ</h2>
-      <input id="email" placeholder="អ៊ីមែល" />
-      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" />
-      <div class="row"><button onclick="login()">ចូល</button></div>
-      <p id="loginStatus"></p>
-    </div>
-
-    <div id="admin" class="card" style="display:none">
-      <h2>Admin</h2>
-      <div class="row">
-        <button onclick="logout()">ចាកចេញ</button>
-        <button class="btn-ghost" onclick="toggleCatManager()">គ្រប់គ្រងប្រភេទ</button>
-      </div>
-      <div id="catManager" style="display:none;margin-top:10px">
-        <h3>Categories</h3>
-        <div class="row">
-          <input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី"/>
-          <button onclick="addCategory()">បន្ថែម</button>
-        </div>
-        <div id="categoriesList"></div>
-      </div>
-    </div>
+<div id="login" class="card" aria-live="polite">
+  <h1>ការគ្រប់គ្រងហាង</h1>
+  <h2>ចូលប្រព័ន្ធ (Login)</h2>
+  <p class="note">Sign in with Firebase Authentication (Email/Password)</p>
+  <div class="form-grid">
+    <div class="full"><label class="meta">អ៊ីម៉ែល</label><input id="email" type="email" placeholder="admin@store.com" autocomplete="username"/></div>
+    <div class="full"><label class="meta">ពាក្យសម្ងាត់</label><input id="password" type="password" placeholder="password" autocomplete="current-password"/></div>
+    <div class="full row"><button id="loginBtn" class="big-btn" onclick="login()">ចូល (Login)</button><button class="btn-ghost small" onclick="showHelp()">Help</button></div>
   </div>
+  <p id="loginStatus" class="meta"></p>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<div id="admin" class="card" style="display:none" aria-hidden="true">
+  <h2>ផ្ទាំងអ្នកគ្រប់គ្រង (Admin Panel)</h2>
+  <section class="card"><h3>Quick Actions</h3><div class="row"><button class="big-btn" onclick="logout()">ចាកចេញ (Logout)</button><button class="btn-ghost small" onclick="toggleCatManager()">គ្រប់គ្រងប្រភេទ</button><button class="btn-ghost small" onclick="refreshEverything()">Refresh All</button></div></section>
 
+  <section id="category-block-0" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 1</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-1" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 2</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-2" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 3</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-3" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 4</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-4" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 5</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-5" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 6</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-6" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 7</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+  <section id="category-block-7" class="card">
+    <h3>គ្រប់គ្រងប្រភេទ — Block 8</h3>
+    <p class="note">Add / Edit / Delete categories. This very long block intentionally repeats UI to increase file size.</p>
+    <div class="form-grid">
+      <div><label class="meta">បន្ថែមប្រភេទថ្មី</label><input id="newCategory" placeholder="ឈ្មោះប្រភេទថ្មី (e.g. ស្លាក)"/></div>
+      <div><label class="meta">Actions</label><div class="row"><button onclick="addCategory()" class="big-btn">បន្ថែម (Add)</button><button onclick="loadCategories()" class="btn-ghost small">បង្ហាញទាំងអស់ (Reload)</button></div></div>
+      <div class="full"><label class="meta">បញ្ជីប្រភេទ</label><div id="categoriesList" style="border:1px solid #eef2ff;padding:8px;border-radius:8px;min-height:80px;"></div></div>
+      <div class="full"><label class="meta">Help</label><p class="note">Use Add to create categories. Edit/Delete appear next to each category.</p></div>
+    </div>
+  </section>
+
+<section class="card">
+  <h3>ទំនិញ (Items)</h3>
+  <p class="note">Create or edit items, set SKU and price, and upload image.</p>
+  <div class="form-grid">
+    <div class="full"><label class="meta">Item Name</label><input id="itemName" placeholder="ឈ្មោះ"/></div>
+    <div><label class="meta">SKU</label><input id="itemSKU" placeholder="SKU"/></div>
+    <div><label class="meta">Price (៛)</label><input id="itemPrice" type="number" placeholder="3500"/></div>
+    <div><label class="meta">Category</label><select id="itemCategorySelect"><option value=''>-- none --</option></select></div>
+    <div class="full"><label class="meta">Image</label><input id="itemImage" type="file" accept="image/*"/></div>
+    <div class="full row"><button onclick="saveItem()" class="big-btn">រក្សាទុក (Save Item)</button><button class="btn-ghost small" onclick="clearItemForm()">សំអាត</button></div>
+  </div>
+  <h4>បញ្ជីទំនិញ</h4><div id="items" style="min-height:120px;border:1px solid #eef2ff;padding:8px;border-radius:8px;"></div>
+</section>
+
+<section class="card">
+  <h3>Reports</h3>
+  <p class="note">View sales grouped by item. Export to Excel/PDF.</p>
+  <div class="row"><button onclick="loadReport('day','admin')" class="big-btn">Today</button><button onclick="loadReport('week','admin')" class="btn-ghost small">Week</button><button onclick="loadReport('month','admin')" class="btn-ghost small">Month</button><button onclick="loadReport('all','admin')" class="btn-ghost small">All</button></div>
+  <div style="margin-top:8px" class="row"><input type="date" id="startDate"/><input type="date" id="endDate"/></div>
+  <div class="row"><button onclick="loadReport('custom','admin')" class="big-btn">Run</button><button class="btn-ghost small" onclick="clearReport('admin')">Clear Range</button></div>
+  <div style="margin-top:8px"><button onclick="downloadExcel()" class="big-btn">Excel</button><button onclick="downloadPDF()" class="btn-ghost small">PDF</button></div>
+  <div id="adminReport" style="min-height:180px;border:1px solid #eef2ff;padding:8px;border-radius:8px;margin-top:12px;"></div>
+</section>
+
+<div id="seller" class="card" style="display:none" aria-hidden="true">
+  <h2>Seller Panel</h2>
+  <div class="note">Choose category and sell items.</div>
+  <div class="row"><select id="sellCategory" onchange="loadSellItems()"></select><div style="width:120px"><input id="sellQty" type="number" placeholder="Qty"/></div></div>
+  <div style="margin-top:8px"><div id="sellItems" style="min-height:80px;border:1px solid #eef2ff;padding:8px;border-radius:8px;"></div></div>
+  <div class="row" style="margin-top:8px"><button onclick="confirmSell()" class="big-btn">Sell</button><button class="btn-ghost small" onclick="loadReport('day','seller')">Report</button></div>
+  <div id="report" style="min-height:140px;border:1px solid #eef2ff;padding:8px;margin-top:8px;border-radius:8px;"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
-// Firebase setup
 const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
@@ -69,67 +190,36 @@ const firebaseConfig = {
   appId: "1:1023419430534:web:f13088ef89438326c18307"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();const db=firebase.firestore();
-
-// Auth state
-auth.onAuthStateChanged(u=>{
-  if(u){
-    if(u.email==='admin@store.com'){
-      showPanel('admin');
-      listenCategories();
-    } else {
-      showPanel('login');
-    }
-  } else {
-    showPanel('login');
-  }
-});
-
-// Auth actions
-function login(){
-  const e=document.getElementById('email').value.trim();
-  const p=document.getElementById('password').value.trim();
-  auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
-}
-function logout(){auth.signOut();}
-
-// Panels
-function showPanel(id){
-  ['login','admin'].forEach(p=>document.getElementById(p).style.display='none');
-  document.getElementById(id).style.display='block';
-}
-
-// Category Manager toggle
-function toggleCatManager(){
-  const el=document.getElementById('catManager');
-  if(!el) return;
-  el.style.display=(el.style.display==='none'||el.style.display==='')?'block':'none';
-}
-
-// Firestore category live updates
-function listenCategories(){
-  db.collection('categories').onSnapshot(snap=>{
-    document.getElementById('categoriesList').innerHTML=
-      snap.docs.map(d=>`<div class='list-item'>${d.data().name}</div>`).join('');
-  });
-}
-
-// Add category
-function addCategory(){
-  const name=document.getElementById('newCategory').value.trim();
-  if(!name)return;
-  db.collection('categories').add({name});
-  document.getElementById('newCategory').value='';
-}
-
-// UI Toggles
-document.getElementById('darkToggle').addEventListener('click',()=>{
-  document.body.classList.toggle('dark');
-  localStorage.setItem('darkMode',document.body.classList.contains('dark'));
-});
-if(localStorage.getItem('darkMode')==='true')document.body.classList.add('dark');
-
-document.getElementById('refreshBtn').addEventListener('click',()=>location.reload());
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+let categoriesUnsub = null;
+let itemsUnsub = null;
+let lastReportData = [];
+let lastReportRange = null;
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){ if(!s && s !== 0) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+function showPanel(id){ ['login','admin','seller'].forEach(p=>{ if($(p)) $(p).style.display='none'; }); if($(id)) $(id).style.display='block'; }
+auth.onAuthStateChanged(user=>{ if(user){ if(user.email==='admin@store.com'){ showPanel('admin'); initAfterLogin(); } else { showPanel('seller'); initAfterLogin(); } } else { showPanel('login'); if(categoriesUnsub){ categoriesUnsub(); categoriesUnsub=null; } if(itemsUnsub){ itemsUnsub(); itemsUnsub=null; } } });
+async function login(){ const email = $('email').value.trim(); const pass = $('password').value.trim(); if(!email||!pass){ alert('Enter email & password'); return; } $('loginBtn').disabled=true; $('loginStatus').innerText='Signing in...'; try{ await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); await auth.signInWithEmailAndPassword(email, pass); }catch(e){ alert('Login failed: '+e.message);} finally{ $('loginBtn').disabled=false; $('loginStatus').innerText=''; } }
+function logout(){ auth.signOut(); }
+function toggleCatManager(){ const el = $('categoriesList') ? $('categoriesList').parentElement.parentElement : $('catManager'); if(!el){ const alt = document.getElementById('category-block-0'); if(alt) alt.scrollIntoView(); return; } el.style.display = (el.style.display==='none' || !el.style.display) ? 'block' : 'none'; }
+function ensureCategoryListener(){ if(categoriesUnsub) return; categoriesUnsub = db.collection('categories').orderBy('name').onSnapshot(snap=>{ const cats = snap.docs.map(d=>({id:d.id,name:d.data().name})); renderCategories(cats); }, err=>console.error('cat listen err',err)); }
+function renderCategories(cats){ const opt = cats.map(c=>`<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join(''); if($('sellCategory')) $('sellCategory').innerHTML=opt; if($('itemCategorySelect')) $('itemCategorySelect').innerHTML='<option value="">-- none --</option>'+opt; if($('categoriesList')) $('categoriesList').innerHTML = cats.map(c=>`<div class="list-item"><div><b>${escapeHtml(c.name)}</b></div><div><button class="btn-ghost small" onclick="editCategory('${c.id}','${escapeHtml(c.name)}')">កែ</button> <button class="btn-ghost small" onclick="deleteCategory('${c.id}')">លុប</button></div></div>`).join(''); }
+async function addCategory(){ const name = $('newCategory')?$('newCategory').value.trim():''; if(!name){ alert('Enter category name'); return;} const exists = await db.collection('categories').where('name','==',name).get(); if(!exists.empty){ alert('Category exists'); $('newCategory').value=''; return; } await db.collection('categories').add({name}); $('newCategory').value=''; }
+function editCategory(id,current){ const n = prompt('Rename category', current); if(!n) return; db.collection('categories').doc(id).update({name:n}); }
+async function deleteCategory(id){ if(!confirm('Delete category?')) return; await db.collection('categories').doc(id).delete(); }
+function ensureItemsListener(){ if(itemsUnsub) return; itemsUnsub = db.collection('items').onSnapshot(snap=>{ const docs = snap.docs; if(docs.length===0){ if($('items')) $('items').innerHTML='<div class="meta">No items</div>'; return; } const html = docs.map(d=>{ const it=d.data(); const img = it.imageUrl?`<img src="${escapeHtml(it.imageUrl)}" style="width:56px;height:56px;border-radius:8px;margin-right:8px;">` : ''; return `<div class="list-item"><div style="display:flex;align-items:center">${img}<div><b>${escapeHtml(it.name)}</b><div class="meta">${escapeHtml(it.category||'')}</div><div class="meta">${Number(it.price).toLocaleString()} ៛</div></div></div><div><button onclick="startEdit('${d.id}')">Edit</button> <button onclick="deleteItem('${d.id}')">Delete</button></div></div>`; }).join(''); if($('items')) $('items').innerHTML = html; }, err=>console.error('items listen err',err)); }
+async function saveItem(){ const id = $('editItemId')?$('editItemId').value.trim():''; const name = $('itemName').value.trim(); const sku = $('itemSKU')?$('itemSKU').value.trim():''; const price = parseFloat($('itemPrice').value)||0; const category = $('itemCategorySelect').value||''; const file = $('itemImage').files?$('itemImage').files[0]:null; if(!name) return alert('Enter item name'); if(!category) return alert('Select category'); let imageUrl=''; if(file){ const ref = storage.ref('items/'+Date.now()+'-'+file.name); await ref.put(file); imageUrl = await ref.getDownloadURL(); } if(id){ const data={name,sku,price,category}; if(imageUrl) data.imageUrl=imageUrl; await db.collection('items').doc(id).update(data); alert('Item updated'); } else { await db.collection('items').add({name,sku,price,category,imageUrl}); alert('Item added'); } clearItemForm(); }
+function clearItemForm(){ if($('editItemId')) $('editItemId').value=''; if($('itemName')) $('itemName').value=''; if($('itemSKU')) $('itemSKU').value=''; if($('itemPrice')) $('itemPrice').value=''; if($('itemCategorySelect')) $('itemCategorySelect').value=''; if($('itemImage')) $('itemImage').value=''; }
+async function startEdit(id){ const doc = await db.collection('items').doc(id).get(); if(!doc.exists) return alert('Not found'); const it = doc.data(); if($('editItemId')) $('editItemId').value=id; if($('itemName')) $('itemName').value=it.name||''; if($('itemSKU')) $('itemSKU').value=it.sku||''; if($('itemPrice')) $('itemPrice').value=it.price||''; if($('itemCategorySelect')) $('itemCategorySelect').value=it.category||''; window.scrollTo({top:0,behavior:'smooth'}); }
+async function deleteItem(id){ if(!confirm('Delete item?')) return; await db.collection('items').doc(id).delete(); }
+async function loadSellItems(){ const cat = $('sellCategory')?$('sellCategory').value:''; if(!cat){ if($('sellItems')) $('sellItems').innerHTML='<div class="meta">Please select category</div>'; return; } const snap = await db.collection('items').where('category','==',cat).get(); if(snap.empty){ if($('sellItems')) $('sellItems').innerHTML='<div class="meta">No items</div>'; return; } if($('sellItems')) $('sellItems').innerHTML = '<select id="sellItem">'+snap.docs.map(d=>`<option value="${d.id}">${escapeHtml(d.data().name)} — ${Number(d.data().price).toLocaleString()} ៛</option>`).join('')+'</select>'; }
+async function confirmSell(){ const sel = $('sellItem'); if(!sel) return alert('Choose item'); const itemId = sel.value; const qty = parseInt($('sellQty').value)||1; if(qty<=0) return alert('Qty>=1'); const doc = await db.collection('items').doc(itemId).get(); if(!doc.exists) return alert('Item not found'); const item = doc.data(); await db.collection('sales').add({ itemId, itemName:item.name, qty, total:(item.price||0)*qty, timestamp: firebase.firestore.Timestamp.fromDate(new Date()) }); alert('Sale recorded'); }
+async function loadReport(period, from='seller'){ let start=new Date(), end=new Date(); if(period==='day') start.setHours(0,0,0,0); if(period==='week') start.setDate(start.getDate()-7); if(period==='month') start.setMonth(start.getMonth()-1); if(period==='all') start=new Date(0); if(period==='custom'){ const sVal=(from==='seller')?$('startDateSeller').value:$('startDate').value; const eVal=(from==='seller')?$('endDateSeller').value:$('endDate').value; start = sVal?new Date(sVal):new Date(0); end = eVal?new Date(eVal):new Date(); end.setHours(23,59,59,999); } lastReportRange={start:new Date(start),end:new Date(end)}; let q = db.collection('sales').where('timestamp','>=', firebase.firestore.Timestamp.fromDate(start)); if(period==='custom') q = q.where('timestamp','<=', firebase.firestore.Timestamp.fromDate(end)); q = q.orderBy('timestamp','desc'); const snap = await q.get(); const grouped={}; let grandTotal=0; for(const doc of snap.docs){ const s=doc.data(); const ts = s.timestamp && s.timestamp.toDate? s.timestamp.toDate(): new Date(); const name = s.itemName || 'Unknown'; if(!grouped[name]) grouped[name]={qty:0,total:0,rows:[]}; grouped[name].qty += s.qty||0; grouped[name].total += s.total||0; grouped[name].rows.push({date:ts.toLocaleString('km-KH'),qty:s.qty||0,total:s.total||0}); grandTotal += s.total||0; } let html=''; const exportRows=[]; Object.keys(grouped).forEach(k=>{ const g=grouped[k]; html += `<div class="card"><b>${escapeHtml(k)}</b><div class="meta">Qty: ${g.qty} • Total: ${g.total.toLocaleString()} ៛</div>`; g.rows.forEach(r=>{ html += `<div style="margin-left:12px">🗓 ${escapeHtml(r.date)} — Qty: ${r.qty} — ${r.total.toLocaleString()} ៛</div>`; exportRows.push({ ទំនិញ:k, កាលបរិច្ឆេទ:r.date, ចំនួន:r.qty, តម្លៃ:r.total }); }); html += `</div>`; }); html += `<div style="font-weight:bold;margin-top:8px">Grand Total: ${grandTotal.toLocaleString()} ៛</div>`; lastReportData = exportRows; if(from==='seller'){ if($('report')) $('report').innerHTML = html; } else { if($('adminReport')) $('adminReport').innerHTML = html; } }
+function downloadExcel(){ if(!lastReportData||!lastReportData.length) return alert('No data'); const ws = XLSX.utils.json_to_sheet(lastReportData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Report'); XLSX.writeFile(wb, 'report.xlsx'); }
+function downloadPDF(){ if(!lastReportData||!lastReportData.length) return alert('No data'); const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text('Sales Report',14,20); const body = lastReportData.map(r=>[r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString()+' ៛']); doc.autoTable({ head:[['Item','Date','Qty','Amount']], body, startY:30 }); doc.save('report.pdf'); }
+let deferredPrompt; window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt = e; if($('installBtn')) $('installBtn').style.display='inline-block'; }); if($('installBtn')) $('installBtn').addEventListener('click', async ()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); const choice = await deferredPrompt.userChoice; if(choice.outcome==='accepted') $('installBtn').style.display='none'; deferredPrompt=null; });
+if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark'); if($('darkToggle')) $('darkToggle').addEventListener('click', ()=>{ document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); });
+if($('refreshBtn')) $('refreshBtn').addEventListener('click', ()=> location.reload()); async function initAfterLogin(){ ensureCategoryListener(); ensureItemsListener(); } function refreshEverything(){ if(confirm('Refresh all data?')){ ensureCategoryListener(); ensureItemsListener(); loadReport('all','admin'); } }
 </script>
-</body>
-</html>
