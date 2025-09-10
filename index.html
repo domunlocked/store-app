@@ -1,149 +1,162 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ការគ្រប់គ្រងហាង</title>
-
-  <!-- KhmerOS Battambang font -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ការគ្រប់គ្រងហាង (PWA)</title>
   <link href="https://fonts.googleapis.com/css2?family=Battambang&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#007bff" />
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 
   <style>
-    body {
-      font-family: 'Battambang', sans-serif;
-      background: #f8f9fa;
-      color: #000;
-      padding: 10px;
-      margin: 0;
-      transition: all 0.3s;
-    }
-    body.dark {
-      background: #121212;
-      color: #f1f1f1;
-    }
-    #login, #admin, #seller { display: none; }
-    .card {
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      margin: 10px auto;
-      max-width: 480px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    body.dark .card { background: #1e1e1e; color: #f1f1f1; }
-    input, button, select {
-      width: 100%;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    body.dark input, body.dark button, body.dark select {
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button { background: #007bff; color: white; cursor: pointer; border: none; }
-    button:hover { background: #0056b3; }
-    body.dark button:hover { background: #3399ff; }
-    img { max-width: 100%; height: auto; }
+    :root{--primary:#007bff;--bg:#f8f9fa;--card:#fff;--text:#000}
+    body{font-family:'Battambang',sans-serif;background:var(--bg);color:var(--text);margin:0;padding:12px;transition:0.2s}
+    body.dark{--bg:#121212;--card:#1e1e1e;--text:#f1f1f1}
+    .wrap{max-width:700px;margin:8px auto}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);margin-bottom:12px}
+    h2,h3{margin:6px 0 10px}
+    input,select,button,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;box-sizing:border-box}
+    button{background:var(--primary);color:#fff;border:none;cursor:pointer}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    .small{padding:8px;font-size:14px}
+    .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+    .list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(0,0,0,0.06)}
+    img.icon{width:40px;height:40px;border-radius:6px;object-fit:cover;margin-left:8px}
+    pre{white-space:pre-wrap;word-break:break-word}
   </style>
+</head>
+<body>
+  <div class="wrap">
+    <div style="text-align:right;margin-bottom:8px">
+      <button id="darkToggle" class="small">🌙/☀️ Dark Mode</button>
+    </div>
 
-  <!-- Firebase SDK -->
+    <!-- Login Card -->
+    <div id="login" class="card">
+      <h2>ចូលប្រព័ន្ធ</h2>
+      <input id="email" placeholder="អ៊ីមែល (admin@store.com or seller@store.com)" />
+      <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" />
+      <div class="row">
+        <button onclick="login()">ចូល</button>
+        <button class="btn-ghost" onclick="signupDemo()">បង្កើត demo users</button>
+      </div>
+      <p style="font-size:13px;color:#666">Note: Use your Firebase project keys in the code. This demo keeps data in Firestore.</p>
+    </div>
+
+    <!-- Admin Card -->
+    <div id="admin" class="card" style="display:none">
+      <h2>ផ្ទាំងអ្នកគ្រប់គ្រង</h2>
+      <div class="row">
+        <button onclick="logout()">ចេញ</button>
+        <button onclick="toggleAdminPanel()">បង្ហាញ/លាក់ ការគ្រប់គ្រងប្រភេទ</button>
+      </div>
+
+      <!-- Category manager -->
+      <div id="catManager" style="display:none;margin-top:10px">
+        <h3>គ្រប់គ្រងប្រភេទ (Categories)</h3>
+        <div class="row">
+          <input id="newCategory" placeholder="ឈ្មោះប្រភេទ​ថ្មី" />
+          <button onclick="addCategory()">បន្ថែម</button>
+        </div>
+        <div id="categoriesList"></div>
+      </div>
+
+      <!-- Item form -->
+      <h3>បន្ថែម/កែទំនិញ</h3>
+      <input id="itemName" placeholder="ឈ្មោះទំនិញ" />
+      <input id="itemSKU" placeholder="កូដទំនិញ (optional)" />
+      <input id="itemPrice" type="number" placeholder="តម្លៃ (៛)" />
+      <select id="itemCategorySelect"></select>
+      <input id="itemImage" type="file" accept="image/*" />
+      <input id="editItemId" type="hidden" />
+      <div class="row">
+        <button onclick="saveItem()">រក្សាទុក</button>
+        <button class="btn-ghost" onclick="clearItemForm()">ស្វែងសិន</button>
+      </div>
+
+      <h3>បញ្ជីទំនិញ</h3>
+      <div id="items"></div>
+
+      <h3>របាយការណ៍លក់ (Admin)</h3>
+      <div class="row">
+        <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
+        <button onclick="loadReport('week','admin')">សប្ដាហ៍</button>
+        <button onclick="loadReport('month','admin')">ខែ</button>
+      </div>
+      <div style="margin-top:8px">
+        <div class="row">
+          <input type="date" id="startDate">
+          <input type="date" id="endDate">
+        </div>
+        <div class="row">
+          <button onclick="loadReport('custom','admin')">ស្វែងរក</button>
+          <button onclick="clearReport('admin')" class="btn-ghost">លុបរបាយការណ៍</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button onclick="downloadExcel()">តាញយក Excel</button>
+          <button onclick="downloadPDF()">តាញយក PDF</button>
+        </div>
+      </div>
+      <div id="adminReport"></div>
+    </div>
+
+    <!-- Seller Card -->
+    <div id="seller" class="card" style="display:none">
+      <h2>ផ្ទាំងអ្នកលក់</h2>
+      <div class="row">
+        <button onclick="logout()">ចេញ</button>
+      </div>
+
+      <h3>ជ្រើសប្រភេទ</h3>
+      <select id="sellCategory" onchange="loadSellItems()"></select>
+      <h3>ជ្រើសទំនិញ</h3>
+      <div id="sellItems"></div>
+      <input id="sellQty" type="number" placeholder="ចំនួនលក់ (ឧ. 3)" />
+      <button onclick="confirmSell()">លក់</button>
+
+      <h3>របាយការណ៍លក់ (Seller)</h3>
+      <div class="row">
+        <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
+        <button onclick="loadReport('week','seller')">សប្ដាហ៍</button>
+        <button onclick="loadReport('month','seller')">ខែ</button>
+      </div>
+      <div style="margin-top:8px">
+        <div class="row">
+          <input type="date" id="startDateSeller"><input type="date" id="endDateSeller">
+        </div>
+        <div class="row">
+          <button onclick="loadReport('custom','seller')">ស្វែងរក</button>
+          <button onclick="clearReport('seller')" class="btn-ghost">លុបរបាយការណ៍</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <button onclick="downloadExcel()">Excel</button>
+          <button onclick="downloadPDF()">PDF</button>
+        </div>
+      </div>
+      <div id="report"></div>
+    </div>
+  </div>
+
+  <!-- Firebase + App Logic -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-  <!-- Excel + PDF -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#007bff">
+  <script>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-  <!-- iOS support -->
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-</head>
-<body>
-
-  <!-- Install + Dark Mode -->
-  <div id="installContainer" class="card" style="display:none; text-align:center;">
-    <button id="installBtn">ដំឡើងកម្មវិធី</button>
-  </div>
-  <div style="text-align:right; margin-bottom:10px;">
-    <button onclick="toggleDarkMode()">🌙/☀️ Dark Mode</button>
-  </div>
-
-  <!-- Login -->
-  <div id="login" class="card">
-    <h2>ចូលប្រព័ន្ធ</h2>
-    <input id="email" type="text" placeholder="អ៊ីមែល (admin@store.com)" /><br>
-    <input id="password" type="password" placeholder="ពាក្យសម្ងាត់" /><br>
-    <button onclick="login()">ចូល</button>
-  </div>
-
-  <!-- Admin Panel -->
-  <div id="admin" class="card">
-    <h2>ផ្ទាំងអ្នកគ្រប់គ្រង</h2>
-    <button onclick="logout()">ចេញ</button>
-    <h3>បន្ថែមទំនិញ</h3>
-    <input id="itemName" type="text" placeholder="ឈ្មោះទំនិញ" />
-    <input id="itemSKU" type="text" placeholder="កូដទំនិញ" />
-    <input id="itemPrice" type="number" placeholder="តម្លៃ (៛)" />
-    <input id="itemCategory" type="text" placeholder="ប្រភេទ (ឧ. ភេសជ្ជៈ, អាហារ)" />
-    <input id="itemImage" type="file" /><br>
-    <button onclick="addItem()">បន្ថែម</button>
-    <h3>បញ្ជីទំនិញ</h3>
-    <div id="items"></div>
-
-    <h3>របាយការណ៍លក់</h3>
-    <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
-    <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
-    <button onclick="loadReport('month','admin')">ខែនេះ</button>
-    <button onclick="loadReport('all','admin')">ទាំងអស់</button><br>
-    <input type="date" id="startDate"> ដល់ 
-    <input type="date" id="endDate">
-    <button onclick="loadReport('custom','admin')">ស្វែងរក</button><br>
-    <button onclick="downloadExcel()">Excel</button>
-    <button onclick="downloadPDF()">PDF</button>
-    <button onclick="clearReport('admin')">លុបរបាយការណ៍</button>
-    <div id="adminReport"></div>
-  </div>
-
-  <!-- Seller Panel -->
-  <div id="seller" class="card">
-    <h2>ផ្ទាំងអ្នកលក់</h2>
-    <button onclick="logout()">ចេញ</button>
-    <h3>ជ្រើសរើសប្រភេទ</h3>
-    <select id="sellCategory" onchange="loadSellItems()"></select>
-    <h3>ជ្រើសរើសទំនិញ</h3>
-    <div id="sellItems"></div>
-    <input id="sellQty" type="number" placeholder="ចំនួនលក់" />
-    <button onclick="confirmSell()">លក់</button>
-
-    <h3>របាយការណ៍លក់</h3>
-    <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
-    <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
-    <button onclick="loadReport('month','seller')">ខែនេះ</button>
-    <button onclick="loadReport('all','seller')">ទាំងអស់</button><br>
-    <input type="date" id="startDateSeller"> ដល់ 
-    <input type="date" id="endDateSeller">
-    <button onclick="loadReport('custom','seller')">ស្វែងរក</button><br>
-    <button onclick="downloadExcel()">Excel</button>
-    <button onclick="downloadPDF()">PDF</button>
-    <button onclick="clearReport('seller')">លុបរបាយការណ៍</button>
-    <div id="report"></div>
-  </div>
-
-<script>
-  // ---------------- Firebase Config ----------------
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
@@ -152,158 +165,222 @@ const firebaseConfig = {
   messagingSenderId: "1023419430534",
   appId: "1:1023419430534:web:f13088ef89438326c18307"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
   const storage = firebase.storage();
 
-  // ---------------- Auth ----------------
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      if (user.email === "admin@store.com") {
-        showPanel("admin"); loadItems();
-      } else if (user.email === "seller@store.com") {
-        showPanel("seller"); loadCategories();
-      }
-    } else { showPanel("login"); }
+  // UI helpers
+  const $ = id => document.getElementById(id);
+
+  // Dark mode
+  $('darkToggle').addEventListener('click',()=>{
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+  });
+  if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark');
+
+  // Auth state
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      if(user.email==='admin@store.com'){ $('admin').style.display='block'; $('seller').style.display='none'; $('login').style.display='none'; loadItems(); loadCategories(); }
+      else { $('seller').style.display='block'; $('admin').style.display='none'; $('login').style.display='none'; loadCategories(); }
+    } else { $('login').style.display='block'; $('admin').style.display='none'; $('seller').style.display='none'; }
   });
 
-  async function login() {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    try {
+  // Demo user creation for testing (only creates users in Firebase Auth)
+  async function signupDemo(){
+    try{
+      await auth.createUserWithEmailAndPassword('admin@store.com','admin123').catch(()=>{});
+      await auth.createUserWithEmailAndPassword('seller@store.com','seller123').catch(()=>{});
+      alert('Demo users created: admin@store.com/admin123 and seller@store.com/seller123');
+    }catch(e){console.error(e); alert('Error creating demo users: '+e.message);}
+  }
+
+  async function login(){
+    const email=$('email').value.trim(), pass=$('password').value.trim();
+    if(!email||!pass){alert('បញ្ចូលអ៊ីមែល និង​ពាក្យសម្ងាត់');return;}
+    try{
       await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-      await auth.signInWithEmailAndPassword(email, pass);
-    } catch (err) { alert("ចូលបរាជ័យ: " + err.message); }
+      await auth.signInWithEmailAndPassword(email,pass);
+    }catch(e){alert('ចូលបរាជ័យ: '+e.message)}
   }
-  function logout() { auth.signOut(); }
-  function showPanel(id) {
-    ["login","admin","seller"].forEach(p => document.getElementById(p).style.display="none");
-    document.getElementById(id).style.display="block";
+  function logout(){ auth.signOut(); }
+
+  // ----- Categories -----
+  async function addCategory(){
+    const name=$('newCategory').value.trim();
+    if(!name) return alert('បញ្ចូលឈ្មោះប្រភេទ');
+    await db.collection('categories').add({name});
+    $('newCategory').value=''; loadCategories(); alert('បានបន្ថែមប្រភេទ');
   }
 
-  // ---------------- Admin: Items ----------------
-  async function addItem() {
-    const name = document.getElementById("itemName").value;
-    const sku = document.getElementById("itemSKU").value;
-    const price = parseFloat(document.getElementById("itemPrice").value);
-    const category = document.getElementById("itemCategory").value;
-    const file = document.getElementById("itemImage").files[0];
-    let imageUrl = "";
+  async function loadCategories(){
+    const snap=await db.collection('categories').get();
+    const cats=snap.docs.map(d=>({id:d.id,...d.data()}));
+    // Ensure categories list includes any categories from items too
+    const itemsSnap = await db.collection('items').get();
+    itemsSnap.docs.forEach(d=>{ const c=d.data().category; if(c && !cats.find(x=>x.name===c)) cats.push({id:null,name:c}); });
 
-    if (file) {
-      const ref = storage.ref("items/" + Date.now() + "-" + file.name);
+    $('sellCategory').innerHTML = cats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('') || '<option>ទទេ</option>';
+    $('itemCategorySelect').innerHTML = '<option value="">-- ជ្រើសប្រភេទ --</option>' + cats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+    renderCategoriesList(cats);
+  }
+
+  function renderCategoriesList(cats){
+    $('categoriesList').innerHTML = cats.map(c=>`<div class="list-item"><div>${c.name}</div><div>
+      <button onclick="editCategory('${c.id||''}','${c.name}')">កែ</button>
+      <button onclick="deleteCategory('${c.id||''}')">លុប</button>
+    </div></div>`).join('');
+  }
+
+  function editCategory(id,name){
+    const newName = prompt('កែឈ្មោះប្រភេទ:', name);
+    if(!newName) return;
+    if(id) db.collection('categories').doc(id).update({name:newName}).then(()=>loadCategories());
+    else { alert('This category comes from items and cannot be edited here. To change, edit the item.'); }
+  }
+
+  async function deleteCategory(id){
+    if(!id){ alert('Cannot delete category created from items. Edit items instead.'); return; }
+    if(!confirm('លុបប្រភេទនេះ?')) return;
+    await db.collection('categories').doc(id).delete();
+    loadCategories();
+  }
+
+  // ----- Items management -----
+  async function saveItem(){
+    const id=$('editItemId').value.trim();
+    const name=$('itemName').value.trim();
+    const sku=$('itemSKU').value.trim();
+    const price=parseFloat($('itemPrice').value)||0;
+    const category=$('itemCategorySelect').value;
+    const file=$('itemImage').files[0];
+    if(!name) return alert('បញ្ចូលឈ្មោះទំនិញ');
+
+    let imageUrl='';
+    if(file){
+      const ref=storage.ref('items/'+Date.now()+'-'+file.name);
       await ref.put(file);
       imageUrl = await ref.getDownloadURL();
     }
 
-    await db.collection("items").add({ name, sku, price, category, imageUrl });
-    loadItems();
+    if(id){
+      const data={name,sku,price,category};
+      if(imageUrl) data.imageUrl=imageUrl;
+      await db.collection('items').doc(id).update(data);
+      alert('Item updated');
+    } else {
+      await db.collection('items').add({name,sku,price,category,imageUrl});
+      alert('Item added');
+    }
+    clearItemForm(); loadItems(); loadCategories();
   }
 
-  async function loadItems() {
-    const snapshot = await db.collection("items").get();
-    let html = "";
-    snapshot.forEach(doc => {
-      const item = doc.data();
-      html += `<div><b>${item.name}</b> (${item.category}) - ${item.price.toLocaleString()} ៛
-        <img src="${item.imageUrl}" width="50"/>
-        <button onclick="deleteItem('${doc.id}')">លុប</button></div>`;
-    });
-    document.getElementById("items").innerHTML = html;
-  }
-  async function deleteItem(id) { await db.collection("items").doc(id).delete(); loadItems(); }
+  function clearItemForm(){['editItemId','itemName','itemSKU','itemPrice','itemImage'].forEach(id=>{ const el=$(id); if(el) el.value=''; }); $('itemCategorySelect').value=''; }
 
-  // ---------------- Seller: Sell ----------------
-  async function loadCategories() {
-    const snapshot = await db.collection("items").get();
-    let categories = [...new Set(snapshot.docs.map(d => d.data().category || "ផ្សេងៗ"))];
-    document.getElementById("sellCategory").innerHTML = categories.map(c => `<option>${c}</option>`).join("");
-    loadSellItems();
+  async function loadItems(){
+    const snap=await db.collection('items').get();
+    const html = snap.docs.map(d=>{ const it=d.data(); return `<div class="list-item"><div><b>${it.name}</b> <div style="color:#666">${it.category||''} • ${it.price?.toLocaleString?.()||it.price} ៛</div></div><div>
+      <button onclick="startEdit('${d.id}')">កែ</button>
+      <button onclick="deleteItem('${d.id}')">លុប</button>
+    </div></div>` }).join('');
+    $('items').innerHTML = html || '<div>គ្មានទំនិញ</div>';
   }
 
-  async function loadSellItems() {
-    const chosen = document.getElementById("sellCategory").value;
-    const snapshot = await db.collection("items").where("category","==",chosen).get();
-    let html = "<select id='sellItem'>";
-    snapshot.forEach(doc => {
-      const item = doc.data();
-      html += `<option value="${doc.id}">${item.name} - ${item.price.toLocaleString()} ៛</option>`;
-    });
-    html += "</select>";
-    document.getElementById("sellItems").innerHTML = html;
+  async function startEdit(id){
+    const doc=await db.collection('items').doc(id).get();
+    if(!doc.exists) return alert('Item not found');
+    const it=doc.data();
+    $('editItemId').value=id; $('itemName').value=it.name||''; $('itemSKU').value=it.sku||''; $('itemPrice').value=it.price||''; $('itemCategorySelect').value=it.category||'';
+    window.scrollTo({top:0,behavior:'smooth'});
   }
 
-  async function confirmSell() {
-    const itemId = document.getElementById("sellItem").value;
-    const qty = parseInt(document.getElementById("sellQty").value) || 1;
-    const itemDoc = await db.collection("items").doc(itemId).get();
-    if (!itemDoc.exists) return;
+  async function deleteItem(id){
+    if(!confirm('លុបទំនិញ?')) return;
+    await db.collection('items').doc(id).delete();
+    loadItems(); loadCategories();
+  }
+
+  // ----- Seller flow -----
+  async function loadSellItems(){
+    const cat = $('sellCategory').value;
+    const snap = await db.collection('items').where('category','==',cat).get();
+    if(snap.empty){ $('sellItems').innerHTML='<div>គ្មានទំនិញ</div>'; return; }
+    $('sellItems').innerHTML = '<select id="sellItem">'+ snap.docs.map(d=>`<option value="${d.id}">${d.data().name} - ${d.data().price?.toLocaleString?.()||d.data().price} ៛</option>`).join('') +'</select>';
+  }
+
+  async function confirmSell(){
+    const sel = $('sellItem'); if(!sel) return alert('ជ្រើសទំនិញមុន');
+    const itemId = sel.value; const qty = parseInt($('sellQty').value)||1;
+    const itemDoc = await db.collection('items').doc(itemId).get(); if(!itemDoc.exists) return alert('Item missing');
     const item = itemDoc.data();
-
-    await db.collection("sales").add({
-      itemId, qty, total: item.price * qty, timestamp: new Date()
-    });
-    alert("លក់បានជោគជ័យ!");
+    await db.collection('sales').add({ itemId, qty, total: (item.price||0)*qty, timestamp: new Date() });
+    alert('លក់បានជោគជ័យ');
   }
 
-  // ---------------- Reports ----------------
+  // ----- Reports -----
   let lastReportData = [];
-  async function loadReport(period, from="seller") {
-    let startDate = new Date(), endDate = new Date();
-    if (period==="day") startDate.setHours(0,0,0,0);
-    if (period==="week") startDate.setDate(startDate.getDate()-7);
-    if (period==="month") startDate.setMonth(startDate.getMonth()-1);
-    if (period==="all") startDate = new Date(0);
-    if (period==="custom") {
-      startDate = new Date(document.getElementById(from==="seller"?"startDateSeller":"startDate").value);
-      endDate = new Date(document.getElementById(from==="seller"?"endDateSeller":"endDate").value);
-      endDate.setHours(23,59,59,999);
+  async function loadReport(period, from='seller'){
+    let start = new Date(), end = new Date();
+    if(period==='day') start.setHours(0,0,0,0);
+    if(period==='week') start.setDate(start.getDate()-7);
+    if(period==='month') start.setMonth(start.getMonth()-1);
+    if(period==='all') start = new Date(0);
+    if(period==='custom'){
+      const s = (from==='seller')?$('startDateSeller').value:$('startDate').value;
+      const e = (from==='seller')?$('endDateSeller').value:$('endDate').value;
+      start = s? new Date(s): new Date(0);
+      end = e? new Date(e): new Date();
+      end.setHours(23,59,59,999);
     }
-    let query = db.collection("sales").where("timestamp",">=",startDate);
-    if (period==="custom") query=query.where("timestamp","<=",endDate);
-    const snapshot = await query.orderBy("timestamp","desc").get();
+    let q = db.collection('sales').where('timestamp','>=',start);
+    if(period==='custom') q = q.where('timestamp','<=',end);
+    const snap = await q.orderBy('timestamp','desc').get();
     let total=0, grouped={};
-    for (const doc of snapshot.docs) {
-      const sale = doc.data(); total+=sale.total;
-      let itemName="មិនស្គាល់";
-      if (sale.itemId) {
-        const i=await db.collection("items").doc(sale.itemId).get();
-        if (i.exists) itemName=i.data().name;
-      }
-      if (!grouped[itemName]) grouped[itemName]={qty:0,total:0,sales:[]};
-      grouped[itemName].qty+=sale.qty; grouped[itemName].total+=sale.total;
-      grouped[itemName].sales.push({date:sale.timestamp.toDate().toLocaleString("km-KH"),qty:sale.qty,total:sale.total});
+    for(const doc of snap.docs){
+      const sale = doc.data(); total += sale.total || 0;
+      let name='មិនស្គាល់'; if(sale.itemId){ const it = await db.collection('items').doc(sale.itemId).get(); if(it.exists) name = it.data().name; }
+      if(!grouped[name]) grouped[name]={qty:0,total:0,sales:[]};
+      grouped[name].qty += sale.qty; grouped[name].total += sale.total; grouped[name].sales.push({date: sale.timestamp.toDate().toLocaleString('km-KH'), qty: sale.qty, total: sale.total});
     }
-    let html=""; lastReportData=[];
-    Object.keys(grouped).forEach(name=>{
-      html+=`<div><b>${name}</b> | ចំនួន: ${grouped[name].qty} | ${grouped[name].total.toLocaleString()} ៛</div>`;
-      grouped[name].sales.forEach(s=>{
-        html+=`<div style="margin-left:20px;">🗓 ${s.date} | ចំនួន: ${s.qty} | ${s.total.toLocaleString()} ៛</div>`;
-        lastReportData.push({ទំនិញ:name,កាលបរិច្ឆេទ:s.date,ចំនួន:s.qty,តម្លៃ:s.total});
-      });
+    let html=''; lastReportData = [];
+    Object.keys(grouped).forEach(n=>{
+      html += `<div class="card"><b>${n}</b><div>ចំនួន៖ ${grouped[n].qty} • តម្លៃសរុប៖ ${grouped[n].total.toLocaleString()} ៛</div>`;
+      grouped[n].sales.forEach(s=>{ html += `<div style="margin-left:12px">🗓 ${s.date} • ចំនួន: ${s.qty} • ${s.total.toLocaleString()} ៛</div>`; lastReportData.push({ទំនិញ:n,កាលបរិច្ឆេទ:s.date,ចំនួន:s.qty,តម្លៃ:s.total}); });
+      html += `</div>`;
     });
-    html+=`<b>សរុប: ${total.toLocaleString()} ៛</b>`;
-    lastReportData.push({ទំនិញ:"សរុប",កាលបរិច្ឆេទ:"",ចំនួន:"",តម្លៃ:total});
-    document.getElementById(from==="seller"?"report":"adminReport").innerHTML=html;
+    html += `<div style="font-weight:bold;margin-top:8px">សរុប: ${total.toLocaleString()} ៛</div>`;
+    lastReportData.push({ទំនិញ:'សរុប',កាលបរិច្ឆេទ:'',ចំនួន:'',តម្លៃ:total});
+    $(from==='seller'?'report':'adminReport').innerHTML = html;
   }
-  function clearReport(from){lastReportData=[];document.getElementById(from==="seller"?"report":"adminReport").innerHTML="";}
+  function clearReport(from){ lastReportData=[]; $(from==='seller'?'report':'adminReport').innerHTML=''; }
 
-  // ---------------- Export ----------------
-  function downloadExcel(){if(!lastReportData.length)return alert("គ្មានទិន្នន័យ!");const ws=XLSX.utils.json_to_sheet(lastReportData);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"របាយការណ៍លក់");XLSX.writeFile(wb,"report.xlsx");}
-  function downloadPDF(){if(!lastReportData.length)return alert("គ្មានទិន្នន័យ!");const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.text("របាយការណ៍លក់",14,20);const data=lastReportData.map(r=>[r["ទំនិញ"],r["កាលបរិច្ឆេទ"],r["ចំនួន"],(r["តម្លៃ"]||0).toLocaleString()+" ៛"]);doc.autoTable({head:[["ទំនិញ","កាលបរិច្ឆេទ","ចំនួន","តម្លៃ"]],body:data,startY:30,theme:"grid"});doc.save("report.pdf");}
+  // ----- Export -----
+  function downloadExcel(){
+    if(!lastReportData.length) return alert('គ្មានទិន្នន័យ');
+    const ws = XLSX.utils.json_to_sheet(lastReportData);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Report');
+    XLSX.writeFile(wb,'report.xlsx');
+  }
+  function downloadPDF(){
+    if(!lastReportData.length) return alert('គ្មានទិន្នន័យ');
+    const { jsPDF } = window.jspdf; const doc = new jsPDF();
+    doc.text('របាយការណ៍លក់',14,20);
+    const body = lastReportData.map(r=>[r['ទំនិញ'], r['កាលបរិច្ឆេទ'], r['ចំនួន'], (r['តម្លៃ']||0).toLocaleString()+' ៛']);
+    doc.autoTable({ head:[['ទំនិញ','កាលបរិច្ឆេទ','ចំនួន','តម្លៃ']], body, startY:30 });
+    doc.save('report.pdf');
+  }
 
-  // ---------------- Dark Mode ----------------
-  function toggleDarkMode(){document.body.classList.toggle("dark");localStorage.setItem("darkMode",document.body.classList.contains("dark"));}
-  if(localStorage.getItem("darkMode")==="true"){document.body.classList.add("dark");}
+  // ----- Service worker & PWA prompt -----
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; /* you can show install UI */ });
+  window.addEventListener('appinstalled', ()=>{ console.log('installed'); });
 
-  // ---------------- Service Worker ----------------
-  if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js");}
-
-  // ---------------- PWA Install ----------------
-  let deferredPrompt;const installContainer=document.getElementById("installContainer");const installBtn=document.getElementById("installBtn");
-  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installContainer.style.display="block";});
-  installBtn.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;installContainer.style.display="none";deferredPrompt=null;}});
-</script>
+  </script>
 </body>
 </html>
