@@ -1,7 +1,7 @@
 {
-  "name": "ការគ្រប់គ្រងហាង",
-  "short_name": "ហាង",
-  "start_url": "index.html",
+  "name": "Stock Store",
+  "short_name": "Store",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
