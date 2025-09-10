@@ -32,11 +32,8 @@
       width: 100%;
       box-sizing: border-box;
     }
-    body.dark .card {
-      background: #1e1e1e;
-      color: #f1f1f1;
-    }
-    input, button {
+    body.dark .card { background: #1e1e1e; color: #f1f1f1; }
+    input, button, select {
       width: 100%;
       margin: 5px 0;
       padding: 10px;
@@ -44,17 +41,12 @@
       border: 1px solid #ccc;
       box-sizing: border-box;
     }
-    body.dark input, body.dark button {
+    body.dark input, body.dark button, body.dark select {
       background: #333;
       color: #fff;
       border: 1px solid #555;
     }
-    button {
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-      border: none;
-    }
+    button { background: #007bff; color: white; cursor: pointer; border: none; }
     button:hover { background: #0056b3; }
     body.dark button:hover { background: #3399ff; }
     img { max-width: 100%; height: auto; }
@@ -66,7 +58,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
-  <!-- Excel + PDF libraries -->
+  <!-- Excel + PDF -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -78,8 +70,6 @@
   <!-- iOS support -->
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
 
@@ -107,13 +97,12 @@
     <input id="itemName" type="text" placeholder="ឈ្មោះទំនិញ" />
     <input id="itemSKU" type="text" placeholder="កូដទំនិញ" />
     <input id="itemPrice" type="number" placeholder="តម្លៃ (៛)" />
-    <input id="itemStock" type="number" placeholder="ចំនួនក្នុងស្តុក" />
+    <input id="itemCategory" type="text" placeholder="ប្រភេទ (ឧ. ភេសជ្ជៈ, អាហារ)" />
     <input id="itemImage" type="file" /><br>
     <button onclick="addItem()">បន្ថែម</button>
     <h3>បញ្ជីទំនិញ</h3>
     <div id="items"></div>
 
-    <!-- Admin Sales Report -->
     <h3>របាយការណ៍លក់</h3>
     <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
     <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
@@ -122,8 +111,8 @@
     <input type="date" id="startDate"> ដល់ 
     <input type="date" id="endDate">
     <button onclick="loadReport('custom','admin')">ស្វែងរក</button><br>
-    <button onclick="downloadExcel()">ទាញយកជា Excel</button>
-    <button onclick="downloadPDF()">ទាញយកជា PDF</button>
+    <button onclick="downloadExcel()">Excel</button>
+    <button onclick="downloadPDF()">PDF</button>
     <button onclick="clearReport('admin')">លុបរបាយការណ៍</button>
     <div id="adminReport"></div>
   </div>
@@ -132,8 +121,13 @@
   <div id="seller" class="card">
     <h2>ផ្ទាំងអ្នកលក់</h2>
     <button onclick="logout()">ចេញ</button>
-    <h3>លក់ទំនិញ</h3>
+    <h3>ជ្រើសរើសប្រភេទ</h3>
+    <select id="sellCategory" onchange="loadSellItems()"></select>
+    <h3>ជ្រើសរើសទំនិញ</h3>
     <div id="sellItems"></div>
+    <input id="sellQty" type="number" placeholder="ចំនួនលក់" />
+    <button onclick="confirmSell()">លក់</button>
+
     <h3>របាយការណ៍លក់</h3>
     <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
     <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
@@ -142,8 +136,8 @@
     <input type="date" id="startDateSeller"> ដល់ 
     <input type="date" id="endDateSeller">
     <button onclick="loadReport('custom','seller')">ស្វែងរក</button><br>
-    <button onclick="downloadExcel()">ទាញយកជា Excel</button>
-    <button onclick="downloadPDF()">ទាញយកជា PDF</button>
+    <button onclick="downloadExcel()">Excel</button>
+    <button onclick="downloadPDF()">PDF</button>
     <button onclick="clearReport('seller')">លុបរបាយការណ៍</button>
     <div id="report"></div>
   </div>
@@ -167,15 +161,11 @@ const firebaseConfig = {
   auth.onAuthStateChanged(user => {
     if (user) {
       if (user.email === "admin@store.com") {
-        showPanel("admin");
-        loadItems();
+        showPanel("admin"); loadItems();
       } else if (user.email === "seller@store.com") {
-        showPanel("seller");
-        loadSellItems();
+        showPanel("seller"); loadCategories();
       }
-    } else {
-      showPanel("login");
-    }
+    } else { showPanel("login"); }
   });
 
   async function login() {
@@ -184,17 +174,12 @@ const firebaseConfig = {
     try {
       await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
       await auth.signInWithEmailAndPassword(email, pass);
-    } catch (err) {
-      alert("ចូលបរាជ័យ: " + err.message);
-    }
+    } catch (err) { alert("ចូលបរាជ័យ: " + err.message); }
   }
   function logout() { auth.signOut(); }
-
   function showPanel(id) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("admin").style.display = "none";
-    document.getElementById("seller").style.display = "none";
-    document.getElementById(id).style.display = "block";
+    ["login","admin","seller"].forEach(p => document.getElementById(p).style.display="none");
+    document.getElementById(id).style.display="block";
   }
 
   // ---------------- Admin: Items ----------------
@@ -202,7 +187,7 @@ const firebaseConfig = {
     const name = document.getElementById("itemName").value;
     const sku = document.getElementById("itemSKU").value;
     const price = parseFloat(document.getElementById("itemPrice").value);
-    const stock = parseInt(document.getElementById("itemStock").value);
+    const category = document.getElementById("itemCategory").value;
     const file = document.getElementById("itemImage").files[0];
     let imageUrl = "";
 
@@ -212,7 +197,7 @@ const firebaseConfig = {
       imageUrl = await ref.getDownloadURL();
     }
 
-    await db.collection("items").add({ name, sku, price, stock, imageUrl });
+    await db.collection("items").add({ name, sku, price, category, imageUrl });
     loadItems();
   }
 
@@ -221,205 +206,104 @@ const firebaseConfig = {
     let html = "";
     snapshot.forEach(doc => {
       const item = doc.data();
-      html += `<div>
-        <b>${item.name}</b> - ${item.price.toLocaleString()} ៛ - ចំនួន: ${item.stock}
-        <img src="${item.imageUrl}" width="50" />
-        <button onclick="deleteItem('${doc.id}')">លុប</button>
-      </div>`;
+      html += `<div><b>${item.name}</b> (${item.category}) - ${item.price.toLocaleString()} ៛
+        <img src="${item.imageUrl}" width="50"/>
+        <button onclick="deleteItem('${doc.id}')">លុប</button></div>`;
     });
     document.getElementById("items").innerHTML = html;
   }
-
-  async function deleteItem(id) {
-    await db.collection("items").doc(id).delete();
-    loadItems();
-  }
+  async function deleteItem(id) { await db.collection("items").doc(id).delete(); loadItems(); }
 
   // ---------------- Seller: Sell ----------------
-  async function loadSellItems() {
+  async function loadCategories() {
     const snapshot = await db.collection("items").get();
-    let html = "";
+    let categories = [...new Set(snapshot.docs.map(d => d.data().category || "ផ្សេងៗ"))];
+    document.getElementById("sellCategory").innerHTML = categories.map(c => `<option>${c}</option>`).join("");
+    loadSellItems();
+  }
+
+  async function loadSellItems() {
+    const chosen = document.getElementById("sellCategory").value;
+    const snapshot = await db.collection("items").where("category","==",chosen).get();
+    let html = "<select id='sellItem'>";
     snapshot.forEach(doc => {
       const item = doc.data();
-      html += `<div>
-        <b>${item.name}</b> - ${item.price.toLocaleString()} ៛ - ចំនួន: ${item.stock}
-        <button onclick="sellItem('${doc.id}')">លក់</button>
-      </div>`;
+      html += `<option value="${doc.id}">${item.name} - ${item.price.toLocaleString()} ៛</option>`;
     });
+    html += "</select>";
     document.getElementById("sellItems").innerHTML = html;
   }
 
-  async function sellItem(id) {
-    const itemRef = db.collection("items").doc(id);
-    const itemDoc = await itemRef.get();
+  async function confirmSell() {
+    const itemId = document.getElementById("sellItem").value;
+    const qty = parseInt(document.getElementById("sellQty").value) || 1;
+    const itemDoc = await db.collection("items").doc(itemId).get();
     if (!itemDoc.exists) return;
     const item = itemDoc.data();
-    if (item.stock <= 0) return alert("អស់ស្តុក");
 
-    await itemRef.update({ stock: item.stock - 1 });
     await db.collection("sales").add({
-      itemId: id,
-      qty: 1,
-      total: item.price,
-      timestamp: new Date()
+      itemId, qty, total: item.price * qty, timestamp: new Date()
     });
-    loadSellItems();
+    alert("លក់បានជោគជ័យ!");
   }
 
   // ---------------- Reports ----------------
   let lastReportData = [];
-
-  async function loadReport(period, from = "seller") {
-    let startDate = new Date();
-    let endDate = new Date();
-
-    if (period === "day") startDate.setHours(0,0,0,0);
-    if (period === "week") startDate.setDate(startDate.getDate() - 7);
-    if (period === "month") startDate.setMonth(startDate.getMonth() - 1);
-    if (period === "all") startDate = new Date(0);
-
-    if (period === "custom") {
-      if (from === "seller") {
-        startDate = new Date(document.getElementById("startDateSeller").value);
-        endDate = new Date(document.getElementById("endDateSeller").value);
-      } else {
-        startDate = new Date(document.getElementById("startDate").value);
-        endDate = new Date(document.getElementById("endDate").value);
-      }
+  async function loadReport(period, from="seller") {
+    let startDate = new Date(), endDate = new Date();
+    if (period==="day") startDate.setHours(0,0,0,0);
+    if (period==="week") startDate.setDate(startDate.getDate()-7);
+    if (period==="month") startDate.setMonth(startDate.getMonth()-1);
+    if (period==="all") startDate = new Date(0);
+    if (period==="custom") {
+      startDate = new Date(document.getElementById(from==="seller"?"startDateSeller":"startDate").value);
+      endDate = new Date(document.getElementById(from==="seller"?"endDateSeller":"endDate").value);
       endDate.setHours(23,59,59,999);
     }
-
-    let query = db.collection("sales").where("timestamp", ">=", startDate);
-    if (period === "custom") query = query.where("timestamp", "<=", endDate);
-
-    const snapshot = await query.orderBy("timestamp", "desc").get();
-
-    let total = 0;
-    let grouped = {}; 
-
+    let query = db.collection("sales").where("timestamp",">=",startDate);
+    if (period==="custom") query=query.where("timestamp","<=",endDate);
+    const snapshot = await query.orderBy("timestamp","desc").get();
+    let total=0, grouped={};
     for (const doc of snapshot.docs) {
-      const sale = doc.data();
-      total += sale.total;
-
-      let itemName = "មិនស្គាល់";
+      const sale = doc.data(); total+=sale.total;
+      let itemName="មិនស្គាល់";
       if (sale.itemId) {
-        const itemDoc = await db.collection("items").doc(sale.itemId).get();
-        if (itemDoc.exists) itemName = itemDoc.data().name;
+        const i=await db.collection("items").doc(sale.itemId).get();
+        if (i.exists) itemName=i.data().name;
       }
-
-      if (!grouped[itemName]) {
-        grouped[itemName] = { qty: 0, total: 0, sales: [] };
-      }
-      grouped[itemName].qty += sale.qty;
-      grouped[itemName].total += sale.total;
-      grouped[itemName].sales.push({
-        date: sale.timestamp.toDate().toLocaleString("km-KH"),
-        qty: sale.qty,
-        total: sale.total
-      });
+      if (!grouped[itemName]) grouped[itemName]={qty:0,total:0,sales:[]};
+      grouped[itemName].qty+=sale.qty; grouped[itemName].total+=sale.total;
+      grouped[itemName].sales.push({date:sale.timestamp.toDate().toLocaleString("km-KH"),qty:sale.qty,total:sale.total});
     }
-
-    let html = "";
-    lastReportData = [];
-
-    Object.keys(grouped).forEach(name => {
-      html += `<div><b>${name}</b> | ចំនួន: ${grouped[name].qty} | តម្លៃសរុប: ${grouped[name].total.toLocaleString()} ៛</div>`;
-      grouped[name].sales.forEach(s => {
-        html += `<div style="margin-left:20px;">🗓 ${s.date} | ចំនួន: ${s.qty} | តម្លៃ: ${s.total.toLocaleString()} ៛</div>`;
-        lastReportData.push({
-          ទំនិញ: name,
-          កាលបរិច្ឆេទ: s.date,
-          ចំនួន: s.qty,
-          តម្លៃ: s.total
-        });
+    let html=""; lastReportData=[];
+    Object.keys(grouped).forEach(name=>{
+      html+=`<div><b>${name}</b> | ចំនួន: ${grouped[name].qty} | ${grouped[name].total.toLocaleString()} ៛</div>`;
+      grouped[name].sales.forEach(s=>{
+        html+=`<div style="margin-left:20px;">🗓 ${s.date} | ចំនួន: ${s.qty} | ${s.total.toLocaleString()} ៛</div>`;
+        lastReportData.push({ទំនិញ:name,កាលបរិច្ឆេទ:s.date,ចំនួន:s.qty,តម្លៃ:s.total});
       });
     });
-
-    html += `<b>សរុប: ${total.toLocaleString()} ៛</b>`;
-    lastReportData.push({ ទំនិញ: "សរុប", កាលបរិច្ឆេទ: "", ចំនួន: "", តម្លៃ: total });
-
-    if (from === "seller") {
-      document.getElementById("report").innerHTML = html;
-    } else {
-      document.getElementById("adminReport").innerHTML = html;
-    }
+    html+=`<b>សរុប: ${total.toLocaleString()} ៛</b>`;
+    lastReportData.push({ទំនិញ:"សរុប",កាលបរិច្ឆេទ:"",ចំនួន:"",តម្លៃ:total});
+    document.getElementById(from==="seller"?"report":"adminReport").innerHTML=html;
   }
+  function clearReport(from){lastReportData=[];document.getElementById(from==="seller"?"report":"adminReport").innerHTML="";}
 
-  // ---------------- Clear Report ----------------
-  function clearReport(from) {
-    lastReportData = [];
-    if (from === "seller") {
-      document.getElementById("report").innerHTML = "";
-    } else {
-      document.getElementById("adminReport").innerHTML = "";
-    }
-  }
-
-  // ---------------- Download Excel ----------------
-  function downloadExcel() {
-    if (!lastReportData.length) return alert("គ្មានទិន្នន័យ!");
-    const ws = XLSX.utils.json_to_sheet(lastReportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "របាយការណ៍លក់");
-    XLSX.writeFile(wb, "report.xlsx");
-  }
-
-  // ---------------- Download PDF ----------------
-  function downloadPDF() {
-    if (!lastReportData.length) return alert("គ្មានទិន្នន័យ!");
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text("របាយការណ៍លក់", 14, 20);
-
-    const tableData = lastReportData.map(r => [
-      r["ទំនិញ"] || "N/A",
-      r["កាលបរិច្ឆេទ"] || "",
-      r["ចំនួន"] || "",
-      (r["តម្លៃ"] || 0).toLocaleString() + " ៛"
-    ]);
-
-    doc.autoTable({
-      head: [["ទំនិញ", "កាលបរិច្ឆេទ", "ចំនួន", "តម្លៃ (៛)"]],
-      body: tableData,
-      startY: 30,
-      theme: "grid"
-    });
-
-    doc.save("report.pdf");
-  }
+  // ---------------- Export ----------------
+  function downloadExcel(){if(!lastReportData.length)return alert("គ្មានទិន្នន័យ!");const ws=XLSX.utils.json_to_sheet(lastReportData);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"របាយការណ៍លក់");XLSX.writeFile(wb,"report.xlsx");}
+  function downloadPDF(){if(!lastReportData.length)return alert("គ្មានទិន្នន័យ!");const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.text("របាយការណ៍លក់",14,20);const data=lastReportData.map(r=>[r["ទំនិញ"],r["កាលបរិច្ឆេទ"],r["ចំនួន"],(r["តម្លៃ"]||0).toLocaleString()+" ៛"]);doc.autoTable({head:[["ទំនិញ","កាលបរិច្ឆេទ","ចំនួន","តម្លៃ"]],body:data,startY:30,theme:"grid"});doc.save("report.pdf");}
 
   // ---------------- Dark Mode ----------------
-  function toggleDarkMode() {
-    document.body.classList.toggle("dark");
-    localStorage.setItem("darkMode", document.body.classList.contains("dark"));
-  }
-  if (localStorage.getItem("darkMode") === "true") {
-    document.body.classList.add("dark");
-  }
+  function toggleDarkMode(){document.body.classList.toggle("dark");localStorage.setItem("darkMode",document.body.classList.contains("dark"));}
+  if(localStorage.getItem("darkMode")==="true"){document.body.classList.add("dark");}
 
-  // ---------------- Register Service Worker ----------------
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js")
-      .then(reg => console.log("Service Worker registered:", reg))
-      .catch(err => console.log("SW registration failed:", err));
-  }
+  // ---------------- Service Worker ----------------
+  if("serviceWorker"in navigator){navigator.serviceWorker.register("sw.js");}
 
-  // ---------------- Install App Button ----------------
-  let deferredPrompt;
-  const installContainer = document.getElementById("installContainer");
-  const installBtn = document.getElementById("installBtn");
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installContainer.style.display = "block";
-  });
-
-  installBtn.addEventListener("click", async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        install
+  // ---------------- PWA Install ----------------
+  let deferredPrompt;const installContainer=document.getElementById("installContainer");const installBtn=document.getElementById("installBtn");
+  window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;installContainer.style.display="block";});
+  installBtn.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;installContainer.style.display="none";deferredPrompt=null;}});
+</script>
+</body>
+</html>
