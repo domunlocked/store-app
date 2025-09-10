@@ -12,7 +12,13 @@
     body {
       font-family: 'Battambang', sans-serif;
       background: #f8f9fa;
+      color: #000;
       padding: 20px;
+      transition: all 0.3s;
+    }
+    body.dark {
+      background: #121212;
+      color: #f1f1f1;
     }
     #login, #admin, #seller { display: none; }
     .card {
@@ -21,12 +27,22 @@
       border-radius: 12px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    body.dark .card {
+      background: #1e1e1e;
+      color: #f1f1f1;
     }
     input, button {
       margin: 5px 0;
       padding: 8px;
       border-radius: 6px;
       border: 1px solid #ccc;
+    }
+    body.dark input, body.dark button {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
     }
     button {
       background: #007bff;
@@ -35,6 +51,7 @@
       border: none;
     }
     button:hover { background: #0056b3; }
+    body.dark button:hover { background: #3399ff; }
   </style>
 
   <!-- Firebase SDK -->
@@ -60,9 +77,12 @@
 </head>
 <body>
 
-  <!-- Install button -->
+  <!-- Install + Dark Mode -->
   <div id="installContainer" class="card" style="display:none; text-align:center;">
     <button id="installBtn">ដំឡើងកម្មវិធី</button>
+  </div>
+  <div style="text-align:right; margin-bottom:10px;">
+    <button onclick="toggleDarkMode()">🌙/☀️ Dark Mode</button>
   </div>
 
   <!-- Login -->
@@ -87,12 +107,15 @@
     <h3>បញ្ជីទំនិញ</h3>
     <div id="items"></div>
 
-    <!-- 🔹 Admin Sales Report -->
+    <!-- Admin Sales Report -->
     <h3>របាយការណ៍លក់</h3>
     <button onclick="loadReport('day','admin')">ថ្ងៃនេះ</button>
     <button onclick="loadReport('week','admin')">សប្ដាហ៍នេះ</button>
     <button onclick="loadReport('month','admin')">ខែនេះ</button>
-    <button onclick="loadReport('all','admin')">ទាំងអស់</button>
+    <button onclick="loadReport('all','admin')">ទាំងអស់</button><br>
+    <input type="date" id="startDate"> ដល់ 
+    <input type="date" id="endDate">
+    <button onclick="loadReport('custom','admin')">ស្វែងរក</button><br>
     <button onclick="downloadExcel()">ទាញយកជា Excel</button>
     <button onclick="downloadPDF()">ទាញយកជា PDF</button>
     <div id="adminReport"></div>
@@ -108,15 +131,18 @@
     <button onclick="loadReport('day','seller')">ថ្ងៃនេះ</button>
     <button onclick="loadReport('week','seller')">សប្ដាហ៍នេះ</button>
     <button onclick="loadReport('month','seller')">ខែនេះ</button>
-    <button onclick="loadReport('all','seller')">ទាំងអស់</button>
+    <button onclick="loadReport('all','seller')">ទាំងអស់</button><br>
+    <input type="date" id="startDateSeller"> ដល់ 
+    <input type="date" id="endDateSeller">
+    <button onclick="loadReport('custom','seller')">ស្វែងរក</button><br>
     <button onclick="downloadExcel()">ទាញយកជា Excel</button>
     <button onclick="downloadPDF()">ទាញយកជា PDF</button>
     <div id="report"></div>
   </div>
 
 <script>
-  // 🔹 Firebase Config (replace with your real config)
-const firebaseConfig = {
+  // ---------------- Firebase Config ----------------
+  const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
   projectId: "stock-store-890d2",
@@ -237,17 +263,31 @@ const firebaseConfig = {
 
   async function loadReport(period, from = "seller") {
     let startDate = new Date();
+    let endDate = new Date();
+
     if (period === "day") startDate.setHours(0,0,0,0);
     if (period === "week") startDate.setDate(startDate.getDate() - 7);
     if (period === "month") startDate.setMonth(startDate.getMonth() - 1);
     if (period === "all") startDate = new Date(0);
 
-    const snapshot = await db.collection("sales")
-      .where("timestamp", ">=", startDate)
-      .get();
+    if (period === "custom") {
+      if (from === "seller") {
+        startDate = new Date(document.getElementById("startDateSeller").value);
+        endDate = new Date(document.getElementById("endDateSeller").value);
+      } else {
+        startDate = new Date(document.getElementById("startDate").value);
+        endDate = new Date(document.getElementById("endDate").value);
+      }
+      endDate.setHours(23,59,59,999);
+    }
+
+    let query = db.collection("sales").where("timestamp", ">=", startDate);
+    if (period === "custom") query = query.where("timestamp", "<=", endDate);
+
+    const snapshot = await query.orderBy("timestamp", "desc").get();
 
     let total = 0;
-    let grouped = {}; // 🔹 group by item
+    let grouped = {}; 
 
     for (const doc of snapshot.docs) {
       const sale = doc.data();
@@ -260,29 +300,36 @@ const firebaseConfig = {
       }
 
       if (!grouped[itemName]) {
-        grouped[itemName] = { qty: 0, total: 0 };
+        grouped[itemName] = { qty: 0, total: 0, sales: [] };
       }
       grouped[itemName].qty += sale.qty;
       grouped[itemName].total += sale.total;
+      grouped[itemName].sales.push({
+        date: sale.timestamp.toDate().toLocaleString("km-KH"),
+        qty: sale.qty,
+        total: sale.total
+      });
     }
 
-    // Build HTML + JSON for export
     let html = "";
     lastReportData = [];
+
     Object.keys(grouped).forEach(name => {
-      html += `<div>${name} | ចំនួន: ${grouped[name].qty} | តម្លៃសរុប: ${grouped[name].total.toLocaleString()} ៛</div>`;
-      lastReportData.push({
-        ទំនិញ: name,
-        ចំនួន: grouped[name].qty,
-        តម្លៃសរុប: grouped[name].total
+      html += `<div><b>${name}</b> | ចំនួន: ${grouped[name].qty} | តម្លៃសរុប: ${grouped[name].total.toLocaleString()} ៛</div>`;
+      grouped[name].sales.forEach(s => {
+        html += `<div style="margin-left:20px;">🗓 ${s.date} | ចំនួន: ${s.qty} | តម្លៃ: ${s.total.toLocaleString()} ៛</div>`;
+        lastReportData.push({
+          ទំនិញ: name,
+          កាលបរិច្ឆេទ: s.date,
+          ចំនួន: s.qty,
+          តម្លៃ: s.total
+        });
       });
     });
 
-    // Add total row
     html += `<b>សរុប: ${total.toLocaleString()} ៛</b>`;
-    lastReportData.push({ ទំនិញ: "សរុប", ចំនួន: "", តម្លៃសរុប: total });
+    lastReportData.push({ ទំនិញ: "សរុប", កាលបរិច្ឆេទ: "", ចំនួន: "", តម្លៃ: total });
 
-    // Show in correct panel
     if (from === "seller") {
       document.getElementById("report").innerHTML = html;
     } else {
@@ -310,18 +357,28 @@ const firebaseConfig = {
 
     const tableData = lastReportData.map(r => [
       r["ទំនិញ"] || "N/A",
+      r["កាលបរិច្ឆេទ"] || "",
       r["ចំនួន"] || "",
-      (r["តម្លៃសរុប"] || 0).toLocaleString() + " ៛"
+      (r["តម្លៃ"] || 0).toLocaleString() + " ៛"
     ]);
 
     doc.autoTable({
-      head: [["ទំនិញ", "ចំនួន", "តម្លៃសរុប (៛)"]],
+      head: [["ទំនិញ", "កាលបរិច្ឆេទ", "ចំនួន", "តម្លៃ (៛)"]],
       body: tableData,
       startY: 30,
       theme: "grid"
     });
 
     doc.save("report.pdf");
+  }
+
+  // ---------------- Dark Mode ----------------
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+  }
+  if (localStorage.getItem("darkMode") === "true") {
+    document.body.classList.add("dark");
   }
 
   // ---------------- Register Service Worker ----------------
