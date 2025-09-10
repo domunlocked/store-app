@@ -45,6 +45,10 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007bff">
 </head>
 <body>
 
@@ -89,7 +93,7 @@
 
 <script>
   // 🔹 Firebase Config (replace with your real config)
-const firebaseConfig = {
+  const firebaseConfig = {
   apiKey: "AIzaSyCL1WNujP_W_JBmFGGd7LkkVX3ZUg_3ar8",
   authDomain: "stock-store-890d2.firebaseapp.com",
   projectId: "stock-store-890d2",
@@ -276,6 +280,13 @@ const firebaseConfig = {
     });
 
     doc.save("report.pdf");
+  }
+
+  // ---------------- Register Service Worker ----------------
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
+      .then(reg => console.log("Service Worker registered:", reg))
+      .catch(err => console.log("SW registration failed:", err));
   }
 </script>
 </body>
